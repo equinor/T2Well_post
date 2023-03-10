@@ -1,0 +1,36 @@
+ Well    1      *bA 1     
+ FaceName:1AA 1*bA 1
+ NextCell:1AA 1     
+ Total Production time=    0.0000 yrs
+ Average production rate per well(kg/s)or(MW)
+   Aqu   =      0.00000000E+00
+   Liquid=      0.00000000E+00
+   Gas   =      0.00000000E+00
+   Energy=      0.00000000E+00
+ Maximum production rate per well(kg/s)or(MW)
+   Aqu   =      0.00000000E+00
+   Liquid=      0.00000000E+00
+   Gas   =      0.00000000E+00
+   Energy=      0.00000000E+00
+ Average production status (MPa, C, or V/V)
+     P   =      0.41632586E+00
+     T   =      0.56250000E+01
+     Aqu =      0.00000000E+00
+     Liq =      0.00000000E+00
+     Gas =      0.10000000E+01
+  Total Injection time=    0.2738 yrs
+   Aqu   =      0.00000000E+00
+   Liquid=      0.00000000E+00
+   Gas   =     -0.99999802E+00
+   Energy=     -0.99999802E-06
+ Maximum production rate per well(kg/s)or(MW)
+   Aqu   =      0.00000000E+00
+   Liquid=      0.00000000E+00
+   Gas   =     -0.10000000E+01
+   Energy=     -0.10000000E-05
+Average pr
+     P   =      0.25000000E+01
+     T   =      0.50000000E+01
+     Aqu =      0.00000000E+00
+     Liq =      0.00000000E+00
+     Gas =      0.10000000E+01
