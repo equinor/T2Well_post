@@ -520,6 +520,8 @@ if __name__ == '__main__':
 
     args = sys.argv
 
+    ip_file = args[1]
+
 
 
 
@@ -738,7 +740,6 @@ if __name__ == '__main__':
 
 
 
-    ip_file = args[1]
 
     spreadsheet = ip_file.split(".")[0]+".xls"
             
