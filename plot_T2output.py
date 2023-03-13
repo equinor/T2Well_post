@@ -22,39 +22,7 @@ rcParams['xtick.major.size'] = 3
 rcParams['font.size'] = 6
 rcParams['lines.linewidth'] = 0.75
 
-raw_names = [r'FFlow', r'FStatus', r'COFT', r'FOFT']
-fnames = []
-op_files = []
-plot_bool = dict()
 
-for f in os.listdir(os.getcwd()):
-    if f in raw_names:
-        f_size = os.path.getsize(f)
-        if f_size>0:
-            fnames.append(f)
-            op_files.append(f)
-            plot_bool[f] = True
-
-
-args = sys.argv
-
-
-
-
-logscale = False
-
-if 'log' in args:
-    logscale = True
-    args.remove('log')
-
-
-
-
-
-
-ip_file = args[1]
-
-spreadsheet = ip_file.split(".")[0]+".xls"
 
 
 
@@ -530,324 +498,357 @@ def plot_OFT(title, df, items, vars):
 
 
 
-# print(args)
-
-ffunc = []
-
-
-parse_dict = dict()
-
-for file in fnames:
-    if file=='FFlow':
-        parse_dict[file]=read_FFlow
-    elif file=='FStatus':
-        parse_dict[file]=read_FStatus
-    elif file=='COFT':
-        parse_dict[file]=read_COFT
-    elif file=='FOFT':
-        parse_dict[file]=read_FOFT
-
-plot_dict = dict()
-
-if len(args)>2:
-    
-    #Turn off all plotting
-    for f in plot_bool:
-        plot_bool[f] = False
-
-
-    #Based on arguments turn on the selected files to plot
-
-    for arg in args[2:]:
-    
-
-
-        arg = arg.split('i')
 
 
 
 
-        arg_v = arg[0].strip(",").split(",")
+if __name__ == '__main__':
 
-        try:
-            arg_i = arg[1].strip(",").split(",")
-        except:
-            arg_i = None
+    raw_names = [r'FFlow', r'FStatus', r'COFT', r'FOFT']
+    fnames = []
+    op_files = []
+    plot_bool = dict()
+
+    for f in os.listdir(os.getcwd()):
+        if f in raw_names:
+            f_size = os.path.getsize(f)
+            if f_size>0:
+                fnames.append(f)
+                op_files.append(f)
+                plot_bool[f] = True
 
 
+    args = sys.argv
+
+
+
+
+    logscale = False
+
+    if 'log' in args:
+        logscale = True
+        args.remove('log')
+
+
+
+    ffunc = []
+
+
+    parse_dict = dict()
+
+    for file in fnames:
+        if file=='FFlow':
+            parse_dict[file]=read_FFlow
+        elif file=='FStatus':
+            parse_dict[file]=read_FStatus
+        elif file=='COFT':
+            parse_dict[file]=read_COFT
+        elif file=='FOFT':
+            parse_dict[file]=read_FOFT
+
+    plot_dict = dict()
+
+    if len(args)>2:
         
+        #Turn off all plotting
+        for f in plot_bool:
+            plot_bool[f] = False
+
+
+        #Based on arguments turn on the selected files to plot
+
+        for arg in args[2:]:
         
 
-        #Check if FStatus is being queried
-        if 'FStatus' in fnames  and arg_v[0].lower() == r'FStatus'.lower():
-            plot_bool[r'FStatus'] = True
-            if len(arg_v)>1:
-                plot_dict[r'FStatus'] = arg_v[1:]
-            else:
-                plot_dict[r'FStatus'] = 'all'
+
+            arg = arg.split('i')
+
+
+
+
+            arg_v = arg[0].strip(",").split(",")
+
+            try:
+                arg_i = arg[1].strip(",").split(",")
+            except:
+                arg_i = None
+
+
+            
+            
+
+            #Check if FStatus is being queried
+            if 'FStatus' in fnames  and arg_v[0].lower() == r'FStatus'.lower():
+                plot_bool[r'FStatus'] = True
+                if len(arg_v)>1:
+                    plot_dict[r'FStatus'] = arg_v[1:]
+                else:
+                    plot_dict[r'FStatus'] = 'all'
+                    
+
+
+            #Check if FFLow is being queried
+            elif 'FFlow' in fnames  and arg_v[0].lower() == r'FFlow'.lower():
+
+
+                plot_bool[r'FFlow'] = True
+
+                if len(arg_v)>1:
+                    plot_dict[r'FFlow'] = arg_v[1:]
+                else:
+                    plot_dict[r'FFlow'] = 'all'
+
+
+
+            #Check if COFT is being queried
+            elif 'COFT' in fnames  and arg_v[0].lower() == r'COFT'.lower():
+                plot_bool[r'COFT'] = True
+                plot_dict[r'COFT'] = dict()
+                if len(arg_v)>1:
+                    plot_dict[r'COFT']['var'] = arg_v[1:]
+                else:
+                    plot_dict[r'COFT']['var'] = 'all'
+
+                if arg_i is None:
+                    plot_dict[r'COFT']['item'] = 'all'
+                else:
+                    plot_dict[r'COFT']['item'] = arg_i
                 
 
+            #Check if FOFT is being queried
+            elif 'FOFT' in fnames  and arg_v[0].lower() == r'FOFT'.lower():
 
-        #Check if FFLow is being queried
-        elif 'FFlow' in fnames  and arg_v[0].lower() == r'FFlow'.lower():
+                plot_bool[r'FOFT'] = True
+                plot_dict[r'FOFT'] = dict()
+                if len(arg_v)>1:
+                    plot_dict[r'FOFT']['var'] = arg_v[1:]
+                else:
+                    plot_dict[r'FOFT']['var'] = 'all'
 
-
-            plot_bool[r'FFlow'] = True
-
-            if len(arg_v)>1:
-                plot_dict[r'FFlow'] = arg_v[1:]
-            else:
-                plot_dict[r'FFlow'] = 'all'
-
-
-
-        #Check if COFT is being queried
-        elif 'COFT' in fnames  and arg_v[0].lower() == r'COFT'.lower():
-            plot_bool[r'COFT'] = True
-            plot_dict[r'COFT'] = dict()
-            if len(arg_v)>1:
-                plot_dict[r'COFT']['var'] = arg_v[1:]
-            else:
-                plot_dict[r'COFT']['var'] = 'all'
-
-            if arg_i is None:
-                plot_dict[r'COFT']['item'] = 'all'
-            else:
-                plot_dict[r'COFT']['item'] = arg_i
-               
-
-        #Check if FOFT is being queried
-        elif 'FOFT' in fnames  and arg_v[0].lower() == r'FOFT'.lower():
-
-            plot_bool[r'FOFT'] = True
-            plot_dict[r'FOFT'] = dict()
-            if len(arg_v)>1:
-                plot_dict[r'FOFT']['var'] = arg_v[1:]
-            else:
-                plot_dict[r'FOFT']['var'] = 'all'
-
-            if arg_i is None:
-                plot_dict[r'FOFT']['item'] = 'all'
-            else:
-                plot_dict[r'FOFT']['item'] = arg_i
-
-    
-
-
-else:
-
-    for f in plot_bool:
-
-        plot_dict[f] = 'all'
-
-        if f in ['COFT', 'FOFT']:
-            plot_dict[f]=dict()
-            plot_dict[f]['var'] = 'all'
-            plot_dict[f]['item'] = 'all'
-
-
-ip_mesh = read_ipMESH(ip_file)
-
-xl_file = ip_file.split(".")[0]+".xlsx"
-
-#Query and index data
-
-for file in fnames:
-
-
-    plot_f = plot_bool[file]
-
-
-    if plot_f:
-        print('Plotting {:s} data'.format(file))
-
-        if file in ['FFlow', 'FStatus']:
-            queried_vars = plot_dict[file]
-
-            df_vars, df = parse_dict[file](file)
-
-            selected_var = df_vars
-
-            if queried_vars != 'all':
-                vars_sel = []
-                for var in queried_vars:
-                    try:
-                        var_idx = (int(var)-1)%len(df_vars)
-                        vars_sel.append(df_vars[var_idx])
-
-                    except:
-                        for var_name in df_vars:
-                            if var.lower() == var_name.lower():
-                                vars_sel.append(var_name)
-                selected_var = vars_sel
-            
-            print('{:s} plot includes: {:s}'.format(file, ' '.join(selected_var)))
-            plot_Ffigure(file,df,selected_var)
-
-
-
-
-        elif file in ['COFT', 'FOFT']:
-            # print(plot_dict)
-
-            queried_vars = plot_dict[file]['var']
-            queried_items = plot_dict[file]['item']
-            
-            # print(queried_vars)
-            
-            
-            df_vars, df_items, df = parse_dict[file](file)
-            
-
-            selected_var = df_vars
-            selected_items = df_items
-
-            # print(selected_items)
-
-            if queried_vars != 'all':
-                vars_sel = []
-                for var in queried_vars:
-                    try:
-                        var_idx = (int(var)-1)%len(df_vars)
-                        vars_sel.append(df_vars[var_idx])
-
-                    except:
-                        for var_name in df_vars:
-                            if var.lower() == var_name.lower():
-                                vars_sel.append(var_name)
-                selected_var = vars_sel
-
-            if queried_items != 'all':
-                item_sel = []
-                for item in queried_items:
-                    try:
-                        item_idx = (int(item)-1)%len(df_items)
-                        item_sel.append(df_items[item_idx])
-
-                    except:
-                        for item_name in df_items:
-                            if item.lower() == item_name.lower():
-                                item_sel.append(item_name)
-                selected_items = item_sel
-
-
-            print('{:s} plotted variables include: {:s}'.format(file, ' '.join(selected_var)))
-            print('{:s} plotted items include: {:s}'.format(file, ' '.join(map(str,selected_items))))
-            plot_OFT(file, df, selected_items, selected_var)
-
-
-
-    print()
-
+                if arg_i is None:
+                    plot_dict[r'FOFT']['item'] = 'all'
+                else:
+                    plot_dict[r'FOFT']['item'] = arg_i
 
         
 
-print_Excel = True
 
-xls_output = input('Do you want to store output files as spreadsheet (Y/N). Default is Yes?\t')
+    else:
 
-if xls_output.lower().startswith('n'):
-    print_Excel = False
-    
-if print_Excel:
-    pd_units = pd.Series(units_dict_v2)
+        for f in plot_bool:
 
-    
-    if r'FStatus' in fnames:
-        #Add column names to FStatus
+            plot_dict[f] = 'all'
 
-        fs_var, fs = read_FStatus(r'FStatus')
-        fs_row1 = fs.columns.to_list()
-        fs_row2 = pd_units[fs_row1].to_list()
-
-        fs_cols = pd.MultiIndex.from_tuples(list(zip( fs_row1, fs_row2)))
-
-        fs.columns = fs_cols
-
-    if r'FFlow' in fnames:
-
-        #Add column names to FFlow
-
-        ff_var, ff = read_FFlow(r'FFlow')
-        ff_row1 = ff.columns.to_list()
-        ff_row2 = pd_units[ff_row1].to_list()
-
-        ff_cols = pd.MultiIndex.from_tuples(list(zip( ff_row1, ff_row2)))
-
-        ff.columns = ff_cols
+            if f in ['COFT', 'FOFT']:
+                plot_dict[f]=dict()
+                plot_dict[f]['var'] = 'all'
+                plot_dict[f]['item'] = 'all'
 
 
-    if r'COFT' in fnames:
+    ip_mesh = read_ipMESH(ip_file)
 
-        #Add column names to COFT
-        coft_var, coft_idx, coft = read_COFT(r'COFT')
+    xl_file = ip_file.split(".")[0]+".xlsx"
 
-        eleme2 = ip_mesh['ELEME'].copy()
-        eleme2 = eleme2.set_index('ElName')
+    #Query and index data
 
-
-        query_x = ip_mesh['CONNE']['ISOT']==1
-        query_y = ip_mesh['CONNE']['ISOT']==2
-        query_z = ip_mesh['CONNE']['ISOT']==3
+    for file in fnames:
 
 
+        plot_f = plot_bool[file]
+
+
+        if plot_f:
+            print('Plotting {:s} data'.format(file))
+
+            if file in ['FFlow', 'FStatus']:
+                queried_vars = plot_dict[file]
+
+                df_vars, df = parse_dict[file](file)
+
+                selected_var = df_vars
+
+                if queried_vars != 'all':
+                    vars_sel = []
+                    for var in queried_vars:
+                        try:
+                            var_idx = (int(var)-1)%len(df_vars)
+                            vars_sel.append(df_vars[var_idx])
+
+                        except:
+                            for var_name in df_vars:
+                                if var.lower() == var_name.lower():
+                                    vars_sel.append(var_name)
+                    selected_var = vars_sel
+                
+                print('{:s} plot includes: {:s}'.format(file, ' '.join(selected_var)))
+                plot_Ffigure(file,df,selected_var)
 
 
 
-        coft_row1 = coft.columns.get_level_values(0).to_list()
-        coft_row2 = (ip_mesh['CONNE'].loc[coft_row1[1:],'EL1']+ip_mesh['CONNE'].loc[coft_row1[1:],'EL2']).to_list()
-        coft_row2 = [''] + coft_row2
-        coft_row3 = coft.columns.get_level_values(1).to_list()
-        coft_row4 = ['s'] + list(pd_units[coft.columns.get_level_values(1)[1:].to_list()].values)
 
-        coft_cols = pd.MultiIndex.from_tuples(list(zip( coft_row1, 
-                                                        coft_row2, 
-                                                        coft_row3,
-                                                        coft_row4)))
+            elif file in ['COFT', 'FOFT']:
+                # print(plot_dict)
 
-        coft.columns = coft_cols
+                queried_vars = plot_dict[file]['var']
+                queried_items = plot_dict[file]['item']
+                
+                # print(queried_vars)
+                
+                
+                df_vars, df_items, df = parse_dict[file](file)
+                
 
-    if r'FOFT' in fnames:
+                selected_var = df_vars
+                selected_items = df_items
 
-        #Add column names to FOFT
-        foft_var, foft_idx, foft = read_FOFT(r'FOFT')
+                # print(selected_items)
 
-        foft_row1 = foft.columns.get_level_values(0).to_list()
-        foft_row1[0] = 'cell_idx'
+                if queried_vars != 'all':
+                    vars_sel = []
+                    for var in queried_vars:
+                        try:
+                            var_idx = (int(var)-1)%len(df_vars)
+                            vars_sel.append(df_vars[var_idx])
 
-        foft_row2 = ip_mesh['ELEME'].loc[foft_row1[1:],'ElName'].to_list()
-        foft_row2 = ['cell_name'] + foft_row2
+                        except:
+                            for var_name in df_vars:
+                                if var.lower() == var_name.lower():
+                                    vars_sel.append(var_name)
+                    selected_var = vars_sel
 
-        foft_row2a = ['cell_X [m]'] + ip_mesh['ELEME'].loc[foft_row1[1:], 'X'].to_list()
-        foft_row2b = ['cell_Y [m]'] + ip_mesh['ELEME'].loc[foft_row1[1:], 'Y'].to_list()
-        foft_row2c = ['cell_Z [m]'] + ip_mesh['ELEME'].loc[foft_row1[1:], 'Z'].to_list()
-        foft_row2d = ['cell_mat'] + ip_mesh['ELEME'].loc[foft_row1[1:], 'MAT'].to_list()
+                if queried_items != 'all':
+                    item_sel = []
+                    for item in queried_items:
+                        try:
+                            item_idx = (int(item)-1)%len(df_items)
+                            item_sel.append(df_items[item_idx])
 
-        foft_row3 = foft.columns.get_level_values(1).to_list()
-        foft_row3[0] = 'time'
-        foft_row4 = ['s'] + list(pd_units[foft.columns.get_level_values(1)[1:].to_list()].values)
-
-        foft_cols = pd.MultiIndex.from_tuples(list(zip( foft_row1, 
-                                                        foft_row2, 
-                                                        foft_row2a, 
-                                                        foft_row2b, 
-                                                        foft_row2c, 
-                                                        foft_row2d, 
-                                                        foft_row3,
-                                                        foft_row4)))
-
-        foft.columns = foft_cols
+                        except:
+                            for item_name in df_items:
+                                if item.lower() == item_name.lower():
+                                    item_sel.append(item_name)
+                    selected_items = item_sel
 
 
-    with pd.ExcelWriter(xl_file) as writer:
+                print('{:s} plotted variables include: {:s}'.format(file, ' '.join(selected_var)))
+                print('{:s} plotted items include: {:s}'.format(file, ' '.join(map(str,selected_items))))
+                plot_OFT(file, df, selected_items, selected_var)
+
+
+
+
+
+    ip_file = args[1]
+
+    spreadsheet = ip_file.split(".")[0]+".xls"
+            
+
+    print_Excel = True
+
+    xls_output = input('Do you want to store output files as spreadsheet (Y/N). Default is Yes?\t')
+
+    if xls_output.lower().startswith('n'):
+        print_Excel = False
+        
+    if print_Excel:
+        pd_units = pd.Series(units_dict_v2)
+
+        
         if r'FStatus' in fnames:
-            fs.to_excel(writer, sheet_name=r'FStatus')
+            #Add column names to FStatus
+
+            fs_var, fs = read_FStatus(r'FStatus')
+            fs_row1 = fs.columns.to_list()
+            fs_row2 = pd_units[fs_row1].to_list()
+
+            fs_cols = pd.MultiIndex.from_tuples(list(zip( fs_row1, fs_row2)))
+
+            fs.columns = fs_cols
+
         if r'FFlow' in fnames:
-            ff.to_excel(writer, sheet_name=r'FFlow')
+
+            #Add column names to FFlow
+
+            ff_var, ff = read_FFlow(r'FFlow')
+            ff_row1 = ff.columns.to_list()
+            ff_row2 = pd_units[ff_row1].to_list()
+
+            ff_cols = pd.MultiIndex.from_tuples(list(zip( ff_row1, ff_row2)))
+
+            ff.columns = ff_cols
+
+
         if r'COFT' in fnames:
-            coft.to_excel(writer, sheet_name=r'COFT')
+
+            #Add column names to COFT
+            coft_var, coft_idx, coft = read_COFT(r'COFT')
+
+            eleme2 = ip_mesh['ELEME'].copy()
+            eleme2 = eleme2.set_index('ElName')
+
+
+            query_x = ip_mesh['CONNE']['ISOT']==1
+            query_y = ip_mesh['CONNE']['ISOT']==2
+            query_z = ip_mesh['CONNE']['ISOT']==3
+
+
+
+
+
+            coft_row1 = coft.columns.get_level_values(0).to_list()
+            coft_row2 = (ip_mesh['CONNE'].loc[coft_row1[1:],'EL1']+ip_mesh['CONNE'].loc[coft_row1[1:],'EL2']).to_list()
+            coft_row2 = [''] + coft_row2
+            coft_row3 = coft.columns.get_level_values(1).to_list()
+            coft_row4 = ['s'] + list(pd_units[coft.columns.get_level_values(1)[1:].to_list()].values)
+
+            coft_cols = pd.MultiIndex.from_tuples(list(zip( coft_row1, 
+                                                            coft_row2, 
+                                                            coft_row3,
+                                                            coft_row4)))
+
+            coft.columns = coft_cols
+
         if r'FOFT' in fnames:
-            foft.to_excel(writer, sheet_name=r'FOFT')
+
+            #Add column names to FOFT
+            foft_var, foft_idx, foft = read_FOFT(r'FOFT')
+
+            foft_row1 = foft.columns.get_level_values(0).to_list()
+            foft_row1[0] = 'cell_idx'
+
+            foft_row2 = ip_mesh['ELEME'].loc[foft_row1[1:],'ElName'].to_list()
+            foft_row2 = ['cell_name'] + foft_row2
+
+            foft_row2a = ['cell_X [m]'] + ip_mesh['ELEME'].loc[foft_row1[1:], 'X'].to_list()
+            foft_row2b = ['cell_Y [m]'] + ip_mesh['ELEME'].loc[foft_row1[1:], 'Y'].to_list()
+            foft_row2c = ['cell_Z [m]'] + ip_mesh['ELEME'].loc[foft_row1[1:], 'Z'].to_list()
+            foft_row2d = ['cell_mat'] + ip_mesh['ELEME'].loc[foft_row1[1:], 'MAT'].to_list()
+
+            foft_row3 = foft.columns.get_level_values(1).to_list()
+            foft_row3[0] = 'time'
+            foft_row4 = ['s'] + list(pd_units[foft.columns.get_level_values(1)[1:].to_list()].values)
+
+            foft_cols = pd.MultiIndex.from_tuples(list(zip( foft_row1, 
+                                                            foft_row2, 
+                                                            foft_row2a, 
+                                                            foft_row2b, 
+                                                            foft_row2c, 
+                                                            foft_row2d, 
+                                                            foft_row3,
+                                                            foft_row4)))
+
+            foft.columns = foft_cols
+
+
+        with pd.ExcelWriter(xl_file) as writer:
+            if r'FStatus' in fnames:
+                fs.to_excel(writer, sheet_name=r'FStatus')
+            if r'FFlow' in fnames:
+                ff.to_excel(writer, sheet_name=r'FFlow')
+            if r'COFT' in fnames:
+                coft.to_excel(writer, sheet_name=r'COFT')
+            if r'FOFT' in fnames:
+                foft.to_excel(writer, sheet_name=r'FOFT')
 
 
 # plt.show()
