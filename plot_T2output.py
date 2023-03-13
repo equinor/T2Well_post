@@ -5,8 +5,6 @@ from os import fstat
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 from matplotlib.cm import ScalarMappable
-import argparse
-
 
 import sys
 import pandas as pd
@@ -25,11 +23,9 @@ rcParams['lines.linewidth'] = 0.75
 
 
 
-
-
 #### Parsing functions
 
-def read_FStatus(ip_file):
+def read_FStatus(ip_file,eos):
 
     """
     Function to parse FStatus file.
@@ -43,7 +39,13 @@ def read_FStatus(ip_file):
         fs_header = next(fs)
     
     fs_header = fs_header.split('=')[1]
-    fs_header = fs_header.split()
+    
+    if eos == 'ECO2N':
+        fs_header = fs_header.split()
+    
+    else:
+        fs_header = fs_header.split(",")
+        fs_header = [item.split('(')[0] for item in fs_header]
 
     fstatus = pd.read_csv(ip_file, skiprows=3, names=fs_header)
     fstatus = fstatus.apply(pd.to_numeric, errors='coerce')
@@ -53,7 +55,7 @@ def read_FStatus(ip_file):
 
     return fs_header[2:], fstatus
 
-def read_FFlow(ip_file):
+def read_FFlow(ip_file, eos):
 
     """
     Function to parse FFlow file.
@@ -64,12 +66,21 @@ def read_FFlow(ip_file):
     print('Processing {:s} file'.format(ip_file))
 
     with open(ip_file) as ff:
+        if eos != 'ECO2N':
+            next(ff)
         ff_header = next(ff)
     
-    ff_header = ff_header.split()
+    if eos == 'ECO2N':
+        ff_header = ff_header.split()
+        r_skip = 1
+    
+    else:
+        ff_header = ff_header.split(",")
+        ff_header = [item.split('(')[0] for item in ff_header]
+        r_skip = 3
 
 
-    fflow = pd.read_csv(ip_file, skiprows=1, names=ff_header)
+    fflow = pd.read_csv(ip_file, skiprows=r_skip, names=ff_header)
     fflow = fflow.apply(pd.to_numeric, errors='coerce')
     fflow = fflow.fillna(0)
 
@@ -250,11 +261,8 @@ def read_ipMESH(fname):
 
     CONNE = CONNE.drop(columns=0)
 
-    mesh['ELEME'] = ELEME
-    mesh['CONNE'] = CONNE
 
-
-    return mesh
+    return ELEME, CONNE
 
 
 
@@ -442,7 +450,7 @@ def plot_OFT(title, df, items, vars, logscale):
             # print('plot item {:d} in {:s} plot'.format(item,var))
 
             if title =='COFT':
-                eleme = ip_mesh['ELEME'].copy()
+                eleme = eleme.copy()
                 eleme = eleme.set_index(('ElName'))
 
     
@@ -457,8 +465,8 @@ def plot_OFT(title, df, items, vars, logscale):
 
 
             elif title =='FOFT':
-                el = ip_mesh['ELEME'].loc[item,'ElName']
-                mat = ip_mesh['ELEME'].loc[item,'MAT']
+                el = eleme.loc[item,'ElName']
+                mat = eleme.loc[item,'MAT']
                 item_label = '{:<4d}{:s}({:s})'.format(item,el,mat)
             df.plot(x='time', y=(item, var), ax=ax, label=item_label, legend = False)
             # df.plot(x='time', y=(item, var), ax=ax, label='tt', legend = False)
@@ -495,62 +503,22 @@ def plot_OFT(title, df, items, vars, logscale):
 
 #Define variables for plotting based on input arguments
 
+def get_EOS(fname):
+    """Retrieves EOS from output file"""
+    with open(fname) as of:
+        lines = of.readlines()
 
+    for line in lines:
+        line = line.strip()
+        if line.startswith('EOS'):
+            EOS = line.split()[5].strip('*')
+            return EOS
 
-
-
-
-
-
-if __name__ == '__main__':
-
-    raw_names = [r'FFlow', r'FStatus', r'COFT', r'FOFT']
-    fnames = []
-    op_files = []
-    plot_bool = dict()
-
-    for f in os.listdir(os.getcwd()):
-        if f in raw_names:
-            f_size = os.path.getsize(f)
-            if f_size>0:
-                fnames.append(f)
-                op_files.append(f)
-                plot_bool[f] = True
-
-
-    args = sys.argv
-
-    ip_file = args[1]
-
-
-
-
-    logscale = False
-
-    if 'log' in args:
-        logscale = True
-        args.remove('log')
-
-
-
-    ffunc = []
-
-
-    parse_dict = dict()
-
-    for file in fnames:
-        if file=='FFlow':
-            parse_dict[file]=read_FFlow
-        elif file=='FStatus':
-            parse_dict[file]=read_FStatus
-        elif file=='COFT':
-            parse_dict[file]=read_COFT
-        elif file=='FOFT':
-            parse_dict[file]=read_FOFT
-
+def plot_specs(ip_args, plot_bool, files):
+    """Defines the files and variables that will be plotted"""   
     plot_dict = dict()
 
-    if len(args)>2:
+    if len(ip_args)>2:
         
         #Turn off all plotting
         for f in plot_bool:
@@ -559,15 +527,9 @@ if __name__ == '__main__':
 
         #Based on arguments turn on the selected files to plot
 
-        for arg in args[2:]:
+        for arg in ip_args[2:]:
         
-
-
             arg = arg.split('i')
-
-
-
-
             arg_v = arg[0].strip(",").split(",")
 
             try:
@@ -575,35 +537,31 @@ if __name__ == '__main__':
             except:
                 arg_i = None
 
-
-            
-            
+            print('file queried:', arg_v)
+            print('items queried:', arg_i)
 
             #Check if FStatus is being queried
-            if 'FStatus' in fnames  and arg_v[0].lower() == r'FStatus'.lower():
-                plot_bool[r'FStatus'] = True
+            if any(item.lower().startswith('fstatus') for item in files) and arg_v[0].lower() == r'fstatus':
+                plot_bool[r'fstatus'] = True
                 if len(arg_v)>1:
-                    plot_dict[r'FStatus'] = arg_v[1:]
+                    plot_dict[r'fstatus'] = arg_v[1:]
                 else:
-                    plot_dict[r'FStatus'] = 'all'
+                    plot_dict[r'fstatus'] = 'all'
                     
 
-
             #Check if FFLow is being queried
-            elif 'FFlow' in fnames  and arg_v[0].lower() == r'FFlow'.lower():
+            if any(item.lower().startswith('fflow') for item in files) and arg_v[0].lower() == r'fflow':
 
-
-                plot_bool[r'FFlow'] = True
+                plot_bool[r'fflow'] = True
 
                 if len(arg_v)>1:
-                    plot_dict[r'FFlow'] = arg_v[1:]
+                    plot_dict[r'fflow'] = arg_v[1:]
                 else:
-                    plot_dict[r'FFlow'] = 'all'
-
+                    plot_dict[r'fflow'] = 'all'
 
 
             #Check if COFT is being queried
-            elif 'COFT' in fnames  and arg_v[0].lower() == r'COFT'.lower():
+            elif any(item.startswith('COFT') for item in files)  and arg_v[0].lower() == r'coft':
                 plot_bool[r'COFT'] = True
                 plot_dict[r'COFT'] = dict()
                 if len(arg_v)>1:
@@ -618,7 +576,7 @@ if __name__ == '__main__':
                 
 
             #Check if FOFT is being queried
-            elif 'FOFT' in fnames  and arg_v[0].lower() == r'FOFT'.lower():
+            elif any(item.startswith('FOFT') for item in files)  and arg_v[0].lower() == r'foft':
 
                 plot_bool[r'FOFT'] = True
                 plot_dict[r'FOFT'] = dict()
@@ -645,11 +603,80 @@ if __name__ == '__main__':
                 plot_dict[f]=dict()
                 plot_dict[f]['var'] = 'all'
                 plot_dict[f]['item'] = 'all'
+    
+    return plot_bool, plot_dict
 
 
-    ip_mesh = read_ipMESH(ip_file)
 
-    xl_file = ip_file.split(".")[0]+".xlsx"
+
+if __name__ == '__main__':
+    args = sys.argv
+    print(args)
+    logscale = False
+
+    ip_path = args[1]
+    ip_dirname = os.path.dirname(ip_path)
+
+    old_path = os.getcwd()
+
+    if len(ip_dirname)>0:
+        os.chdir(ip_dirname)
+
+    
+    raw_names = tuple([r'fflow', r'fstatus', r'coft', r'foft'])
+    fnames = []
+    plot_bool = dict()
+    fnames_map=dict()
+
+    for f in os.listdir():
+        if f.lower().startswith(raw_names):
+            f_size = os.path.getsize(f)
+            if f_size>0:
+                fnames.append(f)
+                flabel = f.lower().split('_')[0]
+                fnames_map[flabel] = f
+                plot_bool[flabel] = True
+
+        elif f.endswith(tuple(['.in', '.inp'])):
+            ip_file = f
+
+        elif f.endswith('out'):
+            op_file = f
+
+    EOS = get_EOS(op_file)
+    print('Input file: {:s}'.format(ip_file))
+    print('EOS version: {:s}'.format(EOS))
+
+    #Define horizontal scale type
+    if 'log' in args:
+        logscale = True
+        args.remove('log')
+
+
+    #Define how files will be parsed
+    parse_dict = dict()
+
+    for file in fnames:
+        if file.lower().startswith('fflow'):
+            parse_dict['fflow']=read_FFlow
+        elif file.lower().startswith('fstatus'):
+            parse_dict[file]=read_FStatus
+        elif file.startswith('COFT'):
+            parse_dict[file]=read_COFT
+        elif file.startswith('FOFT'):
+            parse_dict[file]=read_FOFT
+
+
+    #Define which files and variables will be plotted
+    plot_bool, plot_dict = plot_specs(args, plot_bool, fnames)
+    print(plot_bool)
+    print()
+    print(plot_dict)
+
+
+
+    eleme, conne = read_ipMESH(ip_file)
+    """
 
     #Query and index data
 
@@ -739,9 +766,9 @@ if __name__ == '__main__':
 
 
 
+    """
 
-
-    spreadsheet = ip_file.split(".")[0]+".xls"
+    spreadsheet = ip_file.split(".")[0]+".xlsx"
             
 
     print_Excel = True
@@ -755,10 +782,10 @@ if __name__ == '__main__':
         pd_units = pd.Series(units_dict_v2)
 
         
-        if r'FStatus' in fnames:
+        if r'fstatus' in fnames_map.keys():
             #Add column names to FStatus
 
-            fs_var, fs = read_FStatus(r'FStatus')
+            fs_var, fs = read_FStatus(fname_map['fstatus'])
             fs_row1 = fs.columns.to_list()
             fs_row2 = pd_units[fs_row1].to_list()
 
@@ -766,6 +793,7 @@ if __name__ == '__main__':
 
             fs.columns = fs_cols
 
+"""
         if r'FFlow' in fnames:
 
             #Add column names to FFlow
@@ -784,20 +812,20 @@ if __name__ == '__main__':
             #Add column names to COFT
             coft_var, coft_idx, coft = read_COFT(r'COFT')
 
-            eleme2 = ip_mesh['ELEME'].copy()
+            eleme2 = eleme.copy()
             eleme2 = eleme2.set_index('ElName')
 
 
-            query_x = ip_mesh['CONNE']['ISOT']==1
-            query_y = ip_mesh['CONNE']['ISOT']==2
-            query_z = ip_mesh['CONNE']['ISOT']==3
+            query_x = conne['ISOT']==1
+            query_y = conne['ISOT']==2
+            query_z = conne['ISOT']==3
 
 
 
 
 
             coft_row1 = coft.columns.get_level_values(0).to_list()
-            coft_row2 = (ip_mesh['CONNE'].loc[coft_row1[1:],'EL1']+ip_mesh['CONNE'].loc[coft_row1[1:],'EL2']).to_list()
+            coft_row2 = (conne.loc[coft_row1[1:],'EL1']+conne.loc[coft_row1[1:],'EL2']).to_list()
             coft_row2 = [''] + coft_row2
             coft_row3 = coft.columns.get_level_values(1).to_list()
             coft_row4 = ['s'] + list(pd_units[coft.columns.get_level_values(1)[1:].to_list()].values)
@@ -817,13 +845,13 @@ if __name__ == '__main__':
             foft_row1 = foft.columns.get_level_values(0).to_list()
             foft_row1[0] = 'cell_idx'
 
-            foft_row2 = ip_mesh['ELEME'].loc[foft_row1[1:],'ElName'].to_list()
+            foft_row2 = eleme.loc[foft_row1[1:],'ElName'].to_list()
             foft_row2 = ['cell_name'] + foft_row2
 
-            foft_row2a = ['cell_X [m]'] + ip_mesh['ELEME'].loc[foft_row1[1:], 'X'].to_list()
-            foft_row2b = ['cell_Y [m]'] + ip_mesh['ELEME'].loc[foft_row1[1:], 'Y'].to_list()
-            foft_row2c = ['cell_Z [m]'] + ip_mesh['ELEME'].loc[foft_row1[1:], 'Z'].to_list()
-            foft_row2d = ['cell_mat'] + ip_mesh['ELEME'].loc[foft_row1[1:], 'MAT'].to_list()
+            foft_row2a = ['cell_X [m]'] + eleme.loc[foft_row1[1:], 'X'].to_list()
+            foft_row2b = ['cell_Y [m]'] + eleme.loc[foft_row1[1:], 'Y'].to_list()
+            foft_row2c = ['cell_Z [m]'] + eleme.loc[foft_row1[1:], 'Z'].to_list()
+            foft_row2d = ['cell_mat'] + eleme.loc[foft_row1[1:], 'MAT'].to_list()
 
             foft_row3 = foft.columns.get_level_values(1).to_list()
             foft_row3[0] = 'time'
@@ -841,7 +869,7 @@ if __name__ == '__main__':
             foft.columns = foft_cols
 
 
-        with pd.ExcelWriter(xl_file) as writer:
+        with pd.ExcelWriter(spreadsheet) as writer:
             if r'FStatus' in fnames:
                 fs.to_excel(writer, sheet_name=r'FStatus')
             if r'FFlow' in fnames:
@@ -852,4 +880,4 @@ if __name__ == '__main__':
                 foft.to_excel(writer, sheet_name=r'FOFT')
 
 
-# plt.show()
+"""
