@@ -349,7 +349,7 @@ def secondary_scale(log_bool, ax):
 
 
 
-def plot_Ffigure(title,df,vars):
+def plot_Ffigure(title,df,vars, logscale):
     
     w = 5
     h = (2.5-1)*len(vars)
@@ -415,7 +415,7 @@ def plot_Ffigure(title,df,vars):
 
 
 
-def plot_OFT(title, df, items, vars):
+def plot_OFT(title, df, items, vars, logscale):
     w = 6
     h = (2.8-1)*len(vars)
     
