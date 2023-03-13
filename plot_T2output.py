@@ -75,8 +75,12 @@ def read_FFlow(ip_file, eos):
         r_skip = 1
     
     else:
+        ff_header = ff_header.split('=')[1]
         ff_header = ff_header.split(",")
         ff_header = [item.split('(')[0] for item in ff_header]
+        ff_header.append('V_mix')
+        # add dummy header to column created at the end
+        ff_header.append('trail')
         r_skip = 3
 
 
@@ -84,10 +88,15 @@ def read_FFlow(ip_file, eos):
     fflow = fflow.apply(pd.to_numeric, errors='coerce')
     fflow = fflow.fillna(0)
 
+    if eos != 'ECO2N':
+        fflow = fflow.drop('trail', axis=1)
+        ff_header.pop()
+
 
     return ff_header[2:], fflow
 
-def read_COFT(ip_file):
+
+def read_COFT(ip_file, eos):
 
     """
     Function to parse COFT file.
@@ -108,12 +117,17 @@ def read_COFT(ip_file):
     #Replace remaining NaN values for zero
     coft = coft.fillna(0)
     
-    
-    coft_var = ['FLO(GAS)', 'FLO(aq.)', 'VEL(GAS)', 'VEL(LIQ.)', 'FLO(NaCl)' , 'FLO(CO2)' ,'FLOH']
+    if eos == 'ECO2N':
+        coft_var = ['FLO(GAS)', 'FLO(aq.)', 'VEL(GAS)', 'VEL(LIQ.)', 'FLO(NaCl)' , 'FLO(CO2)' ,'FLOH']
+        c_idx_df = coft.loc[:,2::8]
+    else:
+        coft_var = ['var1', 'var2', 'var3', 'var4']
+        c_idx_df = coft.loc[:,2::5]
+
 
 
     #Retrieve connection indexes and delete columns
-    c_idx_df = coft.loc[:,2::8]
+    
 
     c_idx = c_idx_df.drop_duplicates().values.flatten()
     coft = coft.drop(columns=c_idx_df.columns)
@@ -269,15 +283,14 @@ def read_ipMESH(fname):
 
 #Plotting functions
 
-name_variable = ['Depth', 'Dgas', 'FLO(CO2)', 'FLO(GAS)', 
-                'FLO(NaCl)', 'FLO(aq.)', 'FLOH', 'Fgas', 
-                'Fliq', 'Pres', 'Sg', 'T', 'Time', 
-                'Umix', 'VEL(GAS)', 'VEL(LIQ.)', 'VGas', 
-                'VLiq', 'XCO2liq', 'XNACL']
+name_variable = ['Depth', 'Dis', 'cumDepth', 'Dgas', 'D_aqueous' , 'D_liquid', 'D_gas', 'FLO(CO2)', 'FLO(GAS)', 
+                'FLO(NaCl)', 'FLO(aq.)',  'q_aqueous', 'q_liquid', 'q_gas' , 'FLOH', 'Fgas', 
+                'Fliq', 'Pres', 'Sg', 'S_aqueous', 'S_liquid', 'S_gas', 'T', 'Time', 
+                'Umix', 'VEL(GAS)', 'VEL(LIQ.)', 'VGas',  'V_aqueous', 'V_liquid', 'V_gas', 'V_mix',
+                'VLiq', 'XCO2liq', 'XNACL', 'var1', 'var2', 'var3', 'var4', 'WellID']
 
-unit_variable = ['m', 'kg/m$^3$'] + 4*['kg/s'] + ['W'] + 2*['kg/s'] + ['bar', 'm$^3$/m$^3$', '$\degree$C', 's'] + 5*['m/s'] + 2*['kg/kg']
-
-unit_variable_v2 = ['m', 'kg/m3'] + 4*['kg/s'] + ['W'] + 2*['kg/s'] + ['bar', 'm3/m3', 'degC', 's'] + 5*['m/s'] + 2*['kg/kg']
+unit_variable = ['m']*3 +    4*['kg/m$^3$'] + 7*['kg/s'] + ['W'] + 2*['kg/s'] + ['bar'] + ['m$^3$/m$^3$']*4 + ['$\degree$C', 's'] + 9*['m/s'] + 2*['kg/kg'] + 5*['-']
+unit_variable_v2 = ['m']*3 + 4*['kg/m3']    + 7*['kg/s'] + ['W'] + 2*['kg/s'] + ['bar'] + ['m3/m3'      ]*4 + ['degC', 's']       + 9*['m/s'] + 2*['kg/kg'] + 5*['-']
 
 unit_lims = {'Sg':(0,1)}
 
@@ -785,7 +798,7 @@ if __name__ == '__main__':
         if r'fstatus' in fnames_map.keys():
             #Add column names to FStatus
 
-            fs_var, fs = read_FStatus(fname_map['fstatus'])
+            fs_var, fs = read_FStatus(fnames_map['fstatus'], EOS)
             fs_row1 = fs.columns.to_list()
             fs_row2 = pd_units[fs_row1].to_list()
 
@@ -793,12 +806,12 @@ if __name__ == '__main__':
 
             fs.columns = fs_cols
 
-"""
-        if r'FFlow' in fnames:
+
+        if r'fflow' in fnames_map.keys():
 
             #Add column names to FFlow
 
-            ff_var, ff = read_FFlow(r'FFlow')
+            ff_var, ff = read_FFlow(fnames_map['fflow'], EOS)
             ff_row1 = ff.columns.to_list()
             ff_row2 = pd_units[ff_row1].to_list()
 
@@ -807,10 +820,10 @@ if __name__ == '__main__':
             ff.columns = ff_cols
 
 
-        if r'COFT' in fnames:
+        if r'coft' in fnames_map.keys():
 
             #Add column names to COFT
-            coft_var, coft_idx, coft = read_COFT(r'COFT')
+            coft_var, coft_idx, coft = read_COFT(fnames_map['coft'], EOS)
 
             eleme2 = eleme.copy()
             eleme2 = eleme2.set_index('ElName')
@@ -837,10 +850,10 @@ if __name__ == '__main__':
 
             coft.columns = coft_cols
 
-        if r'FOFT' in fnames:
+        if r'foft' in fnames_map.keys():
 
             #Add column names to FOFT
-            foft_var, foft_idx, foft = read_FOFT(r'FOFT')
+            foft_var, foft_idx, foft = read_FOFT(fnames_map['foft'])
 
             foft_row1 = foft.columns.get_level_values(0).to_list()
             foft_row1[0] = 'cell_idx'
@@ -870,14 +883,13 @@ if __name__ == '__main__':
 
 
         with pd.ExcelWriter(spreadsheet) as writer:
-            if r'FStatus' in fnames:
+            if r'fstatus' in fnames_map.keys():
                 fs.to_excel(writer, sheet_name=r'FStatus')
-            if r'FFlow' in fnames:
+            if r'fflow' in fnames_map.keys():
                 ff.to_excel(writer, sheet_name=r'FFlow')
-            if r'COFT' in fnames:
+            if r'coft' in fnames_map.keys():
                 coft.to_excel(writer, sheet_name=r'COFT')
-            if r'FOFT' in fnames:
+            if r'foft' in fnames_map.keys():
                 foft.to_excel(writer, sheet_name=r'FOFT')
 
 
-"""
