@@ -171,7 +171,7 @@ def read_FOFT(ip_file, eos):
     if eos == 'ECO2N':
         foft_var = ['Pres', 'Sg', 'XNACL', 'XCO2liq', 'T']
     else:
-        foft_var = ['Pres', 'T', 'SLIQ', 'SGAS', 'XCO2AQ']
+        foft_var = ['Pres', 'T', 'S_liquid', 'S_gas', 'XCO2liq']
     
     #Retrieve element indexes and delete columns
     e_idx_df = foft.loc[:,2::6]
