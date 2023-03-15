@@ -856,7 +856,7 @@ if __name__ == '__main__':
         if r'foft' in fnames_map.keys():
 
             #Add column names to FOFT
-            foft_var, foft_idx, foft = read_FOFT(fnames_map['foft'])
+            foft_var, foft_idx, foft = read_FOFT(fnames_map['foft'], EOS)
 
             foft_row1 = foft.columns.get_level_values(0).to_list()
             foft_row1[0] = 'cell_idx'
