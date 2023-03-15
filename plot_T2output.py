@@ -146,7 +146,7 @@ def read_COFT(ip_file, eos):
 
     return coft_var, c_idx, coft
 
-def read_FOFT(ip_file):
+def read_FOFT(ip_file, eos):
 
     """
     Function to parse FOFT file.
@@ -168,7 +168,10 @@ def read_FOFT(ip_file):
     foft = foft.fillna(0)
     
     #Define headers
-    foft_var = ['Pres', 'Sg', 'XNACL', 'XCO2liq', 'T']
+    if eos == 'ECO2N':
+        foft_var = ['Pres', 'Sg', 'XNACL', 'XCO2liq', 'T']
+    else:
+        foft_var = ['Pres', 'T', 'SLIQ', 'SGAS', 'XCO2AQ']
     
     #Retrieve element indexes and delete columns
     e_idx_df = foft.loc[:,2::6]
