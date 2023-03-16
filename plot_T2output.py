@@ -455,7 +455,8 @@ def plot_OFT(title, df, items, df_vars, logscale, mesh_eleme, mesh_conne):
     h = 5.85
     rcParams['figure.figsize'] = [w,h]
 
-    mesh_eleme = mesh_eleme.set_index(('ElName'))
+    mesh_eleme_v2 = mesh_eleme.copy()
+    mesh_eleme_v2 = mesh_eleme_v2.set_index(('ElName'))
 
 
     fig, axs = plt.subplots(len(df_vars),1, sharex=True)
@@ -471,7 +472,7 @@ def plot_OFT(title, df, items, df_vars, logscale, mesh_eleme, mesh_conne):
             ax = axs
 
         for item in items:
-            print('plot item {:d} in {:s} plot'.format(item,var))
+            # print('plot item {:d} in {:s} plot'.format(item,var))
 
             if title =='coft':
    
@@ -479,8 +480,8 @@ def plot_OFT(title, df, items, df_vars, logscale, mesh_eleme, mesh_conne):
                 el2 = mesh_conne.loc[item, 'EL2']
                 k_dir = mesh_conne.loc[item, 'ISOT']
 
-                mat1 = mesh_eleme.loc[el1,'MAT']
-                mat2 = mesh_eleme.loc[el2,'MAT']
+                mat1 = mesh_eleme_v2.loc[el1,'MAT']
+                mat2 = mesh_eleme_v2.loc[el2,'MAT']
                 item_label =  '{:s}>{:s}({:s} to {:s} in {:s} dir.)'.format(el1,el2,mat1, mat2, perm_dict[k_dir])
 
 
@@ -490,11 +491,6 @@ def plot_OFT(title, df, items, df_vars, logscale, mesh_eleme, mesh_conne):
                 mat = mesh_eleme.loc[item,'MAT']
                 item_label = '{:<4d}{:s}({:s})'.format(item,el,mat)
             df.plot(x='time', y=(item, var), ax=ax, label=item_label, legend = False)
-            # df.plot(x='time', y=(item, var), ax=ax, label='tt', legend = False)
-
-        ##TEST
-        #ax.set_xlim(left=-1, right=30*60)
-        ##TEST
 
         if var == df_vars[-1]:
             ax.set_xlabel('time [s]')
