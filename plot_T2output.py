@@ -53,7 +53,7 @@ def read_FStatus(ip_file,eos):
     fstatus['Pres']/= 1e5
 
 
-    return fs_header[2:], fstatus
+    return fs_header, fstatus
 
 def read_FFlow(ip_file, eos):
 
@@ -99,7 +99,7 @@ def read_FFlow(ip_file, eos):
 def read_COFT(ip_file, eos):
 
     """
-    Function to parse COFT file.
+    Function to parse coft file.
     It creates a pandas dataframe
     """
 
@@ -133,7 +133,7 @@ def read_COFT(ip_file, eos):
     coft = coft.drop(columns=c_idx_df.columns)
 
 
-    print('{:4d} connections reported in COFT.'.format(len(c_idx)))
+    print('{:4d} connections reported in coft.'.format(len(c_idx)))
 
 
     #Define multiIndex to rename columns
@@ -149,7 +149,7 @@ def read_COFT(ip_file, eos):
 def read_FOFT(ip_file, eos):
 
     """
-    Function to parse FOFT file.
+    Function to parse foft file.
     It creates a pandas dataframe
     """
 
@@ -180,7 +180,7 @@ def read_FOFT(ip_file, eos):
     e_idx = e_idx_df.drop_duplicates().values.flatten()
 
     
-    print('{:4d} grid elements reported in FOFT.'.format(len(e_idx)))
+    print('{:4d} grid elements reported in foft.'.format(len(e_idx)))
 
     foft = foft.drop(columns=e_idx_df.columns)
 
@@ -260,6 +260,7 @@ def read_ipMESH(fname):
         CONNE_f = CONNE_i + f[CONNE_i:].find('+++')
         CONNE_raw = f[CONNE_i:CONNE_f].split('\n')[1:-1]
     else:
+        f = f.replace('\n \n', '\n\n')
         CONNE_f = CONNE_i + f[CONNE_i:].find('\n\n')
         CONNE_raw = f[CONNE_i:CONNE_f].split('\n')[1:]
 
@@ -373,39 +374,49 @@ def secondary_scale(log_bool, ax):
 
 
 
-def plot_Ffigure(title,df,vars, logscale):
+def plot_Ffigure(title,df,df_vars, logscale, eos):
+    """function that plots FStatus and FFlow file"""
+    #filter index bars
+    index_var = ['WellID',  'Time',  'Dis',  'cumDepth', 'Depth']
+    plot_vars = [item for item in df_vars if item not in index_var]
     
+    #Set plot dimensions
     w = 5
-    h = (2.5-1)*len(vars)
+    h = (2.5-1)*len(plot_vars)
     rcParams['figure.figsize'] = [w,h]
 
-    fig, axs = plt.subplots(len(vars),1, sharex=True)
+    #Create axes
+    fig, axs = plt.subplots(len(plot_vars),1, sharex=True)
 
-    size_j = df['Depth'].drop_duplicates().shape[0]
+
+    #Pick right depth vector depending on labels difference in EOS version
+    if EOS == 'ECO2N':
+        Z_label = 'Depth'
+    else:
+        Z_label = 'Dis'
+    
+    #Define x, y dimensions for creating contour plot
+    size_j = df[Z_label].drop_duplicates().shape[0]
     size_i = int(df['Time'].shape[0]/size_j)
 
-    df['Time_d'] = df['Time']/(3600*24)
-    
-    
-    if title == r'FFlow':
-        for var in vars[0:2]:
-            unit_lims[var] = ( np.percentile(df[vars[0:2]], 0.25), np.percentile(df[vars[0:2]], 99.75) )
-        for var in vars[2:]:
-            unit_lims[var] = ( np.percentile(df[vars[2:]], 0.25), np.percentile(df[vars[2:]], 99.75) )
+    #Define the X and Y axis
+    X = df['Time'].values.reshape(size_i, size_j)
+    Y = df[Z_label].values.reshape(size_i, size_j)
 
-       
-        
-    for var_idx, var in enumerate(vars):
 
-        # print(var_idx, var)
+    for var_idx, var in enumerate(plot_vars):
 
-        if len(vars)>1:
+        #Define limits for saturation variables
+        if var in ['Sg', 'S_aqueous', 'S_liquid', 'S_gas']:
+            unit_lims[var] = (0,1)
+
+
+        if len(plot_vars)>1:
             ax = axs[var_idx]
         else:
             ax = axs
 
-        X = df['Time'].values.reshape(size_i, size_j)
-        Y = df['Depth'].values.reshape(size_i, size_j)
+
         Z = df[var].values.reshape(size_i, size_j)
         
 
@@ -419,16 +430,13 @@ def plot_Ffigure(title,df,vars, logscale):
         
         cb.set_label('{:s} [{:s}]'.format(var,units_dict[var]))
         ax.set_ylabel('depth [m]')
-        ##TEST
-        #ax.set_xlim(right=20*60)
-        ##TEST
 
         ax.invert_yaxis()
 
-        if var == vars[-1]:
+        if var == plot_vars[-1]:
             ax.set_xlabel('time [s]')
 
-        if var == vars[0]:
+        if var == plot_vars[0]:
             secondary_scale(logscale, ax)
 
     fig.suptitle(title)
@@ -439,50 +447,47 @@ def plot_Ffigure(title,df,vars, logscale):
 
 
 
-def plot_OFT(title, df, items, vars, logscale):
+def plot_OFT(title, df, items, df_vars, logscale, mesh_eleme, mesh_conne):
     w = 6
-    h = (2.8-1)*len(vars)
+    h = (2.8-1)*len(df_vars)
     
     w = 8.1
     h = 5.85
     rcParams['figure.figsize'] = [w,h]
 
-    
-
-    fig, axs = plt.subplots(len(vars),1, sharex=True)
-
-    for var_idx, var in enumerate(vars):
-
-        # print(var_idx, var)
+    mesh_eleme = mesh_eleme.set_index(('ElName'))
 
 
+    fig, axs = plt.subplots(len(df_vars),1, sharex=True)
 
-        if len(vars)>1:
+    for var_idx, var in enumerate(df_vars):
+
+        print(var_idx, var)
+
+
+        if len(df_vars)>1:
             ax = axs[var_idx]
         else:
             ax = axs
 
         for item in items:
-            # print('plot item {:d} in {:s} plot'.format(item,var))
+            print('plot item {:d} in {:s} plot'.format(item,var))
 
-            if title =='COFT':
-                eleme = eleme.copy()
-                eleme = eleme.set_index(('ElName'))
+            if title =='coft':
+   
+                el1 = mesh_conne.loc[item, 'EL1']
+                el2 = mesh_conne.loc[item, 'EL2']
+                k_dir = mesh_conne.loc[item, 'ISOT']
 
-    
-                el1 = ip_mesh['CONNE'].loc[item, 'EL1']
-                el2 = ip_mesh['CONNE'].loc[item, 'EL2']
-                k_dir = ip_mesh['CONNE'].loc[item, 'ISOT']
-
-                mat1 = eleme.loc[el1,'MAT']
-                mat2 = eleme.loc[el2,'MAT']
+                mat1 = mesh_eleme.loc[el1,'MAT']
+                mat2 = mesh_eleme.loc[el2,'MAT']
                 item_label =  '{:s}>{:s}({:s} to {:s} in {:s} dir.)'.format(el1,el2,mat1, mat2, perm_dict[k_dir])
 
 
 
-            elif title =='FOFT':
-                el = eleme.loc[item,'ElName']
-                mat = eleme.loc[item,'MAT']
+            elif title =='foft':
+                el = mesh_eleme.loc[item,'ElName']
+                mat = mesh_eleme.loc[item,'MAT']
                 item_label = '{:<4d}{:s}({:s})'.format(item,el,mat)
             df.plot(x='time', y=(item, var), ax=ax, label=item_label, legend = False)
             # df.plot(x='time', y=(item, var), ax=ax, label='tt', legend = False)
@@ -491,10 +496,10 @@ def plot_OFT(title, df, items, vars, logscale):
         #ax.set_xlim(left=-1, right=30*60)
         ##TEST
 
-        if var == vars[-1]:
+        if var == df_vars[-1]:
             ax.set_xlabel('time [s]')
 
-        if var == vars[0]:
+        if var == df_vars[0]:
             secondary_scale(logscale, ax)
         
 
@@ -502,7 +507,7 @@ def plot_OFT(title, df, items, vars, logscale):
         
         ax.set_ylabel('{:s} [{:s}]'.format(var, units_dict[var]))
         
-    if title == 'FOFT':
+    if title == 'foft':
         ax.set_yscale('log')
 
     fig.suptitle(title)
@@ -576,35 +581,35 @@ def plot_specs(ip_args, plot_bool, files):
                     plot_dict[r'fflow'] = 'all'
 
 
-            #Check if COFT is being queried
-            elif any(item.startswith('COFT') for item in files)  and arg_v[0].lower() == r'coft':
-                plot_bool[r'COFT'] = True
-                plot_dict[r'COFT'] = dict()
+            #Check if coft is being queried
+            elif any(item.startswith('COFT') for item in files) and arg_v[0].lower() == r'coft':
+                plot_bool[r'coft'] = True
+                plot_dict[r'coft'] = dict()
                 if len(arg_v)>1:
-                    plot_dict[r'COFT']['var'] = arg_v[1:]
+                    plot_dict[r'coft']['var'] = arg_v[1:]
                 else:
-                    plot_dict[r'COFT']['var'] = 'all'
+                    plot_dict[r'coft']['var'] = 'all'
 
                 if arg_i is None:
-                    plot_dict[r'COFT']['item'] = 'all'
+                    plot_dict[r'coft']['item'] = 'all'
                 else:
-                    plot_dict[r'COFT']['item'] = arg_i
+                    plot_dict[r'coft']['item'] = arg_i
                 
 
-            #Check if FOFT is being queried
-            elif any(item.startswith('FOFT') for item in files)  and arg_v[0].lower() == r'foft':
+            #Check if foft is being queried
+            elif any(item.startswith('FOFT') for item in files) and arg_v[0].lower() == r'foft':
 
-                plot_bool[r'FOFT'] = True
-                plot_dict[r'FOFT'] = dict()
+                plot_bool[r'foft'] = True
+                plot_dict[r'foft'] = dict()
                 if len(arg_v)>1:
-                    plot_dict[r'FOFT']['var'] = arg_v[1:]
+                    plot_dict[r'foft']['var'] = arg_v[1:]
                 else:
-                    plot_dict[r'FOFT']['var'] = 'all'
+                    plot_dict[r'foft']['var'] = 'all'
 
                 if arg_i is None:
-                    plot_dict[r'FOFT']['item'] = 'all'
+                    plot_dict[r'foft']['item'] = 'all'
                 else:
-                    plot_dict[r'FOFT']['item'] = arg_i
+                    plot_dict[r'foft']['item'] = arg_i
 
         
 
@@ -615,7 +620,7 @@ def plot_specs(ip_args, plot_bool, files):
 
             plot_dict[f] = 'all'
 
-            if f in ['COFT', 'FOFT']:
+            if f in ['coft', 'foft']:
                 plot_dict[f]=dict()
                 plot_dict[f]['var'] = 'all'
                 plot_dict[f]['item'] = 'all'
@@ -672,14 +677,14 @@ if __name__ == '__main__':
     #Define how files will be parsed
     parse_dict = dict()
 
-    for file in fnames:
+    for file in fnames_map:
         if file.lower().startswith('fflow'):
-            parse_dict['fflow']=read_FFlow
+            parse_dict[file]=read_FFlow
         elif file.lower().startswith('fstatus'):
             parse_dict[file]=read_FStatus
-        elif file.startswith('COFT'):
+        elif file.startswith('coft'):
             parse_dict[file]=read_COFT
-        elif file.startswith('FOFT'):
+        elif file.startswith('foft'):
             parse_dict[file]=read_FOFT
 
 
@@ -692,25 +697,30 @@ if __name__ == '__main__':
 
 
     eleme, conne = read_ipMESH(ip_file)
-    """
+    
 
     #Query and index data
 
-    for file in fnames:
 
+    for ftype in fnames_map:
 
-        plot_f = plot_bool[file]
+        file = fnames_map[ftype]
+
+        plot_f = plot_bool[ftype]
 
 
         if plot_f:
             print('Plotting {:s} data'.format(file))
 
-            if file in ['FFlow', 'FStatus']:
-                queried_vars = plot_dict[file]
+            if ftype in ['fflow', 'fstatus']:
+                queried_vars = plot_dict[ftype]
 
-                df_vars, df = parse_dict[file](file)
+            
+
+                df_vars, df = parse_dict[ftype](file, EOS)
 
                 selected_var = df_vars
+                print(selected_var)
 
                 if queried_vars != 'all':
                     vars_sel = []
@@ -726,21 +736,21 @@ if __name__ == '__main__':
                     selected_var = vars_sel
                 
                 print('{:s} plot includes: {:s}'.format(file, ' '.join(selected_var)))
-                plot_Ffigure(file,df,selected_var)
+                plot_Ffigure(ftype, df,selected_var, logscale, EOS)
 
 
 
 
-            elif file in ['COFT', 'FOFT']:
-                # print(plot_dict)
+            elif ftype in ['coft', 'foft']:
+                print(plot_dict)
 
-                queried_vars = plot_dict[file]['var']
-                queried_items = plot_dict[file]['item']
+                queried_vars = plot_dict[ftype]['var']
+                queried_items = plot_dict[ftype]['item']
                 
                 # print(queried_vars)
                 
                 
-                df_vars, df_items, df = parse_dict[file](file)
+                df_vars, df_items, df = parse_dict[ftype](file, EOS)
                 
 
                 selected_var = df_vars
@@ -777,12 +787,12 @@ if __name__ == '__main__':
 
                 print('{:s} plotted variables include: {:s}'.format(file, ' '.join(selected_var)))
                 print('{:s} plotted items include: {:s}'.format(file, ' '.join(map(str,selected_items))))
-                plot_OFT(file, df, selected_items, selected_var)
+                plot_OFT(ftype, df, selected_items, selected_var, logscale, mesh_eleme=eleme, mesh_conne=conne)
 
 
 
 
-    """
+    
 
     spreadsheet = ip_file.split(".")[0]+".xlsx"
             
@@ -825,7 +835,7 @@ if __name__ == '__main__':
 
         if r'coft' in fnames_map.keys():
 
-            #Add column names to COFT
+            #Add column names to coft
             coft_var, coft_idx, coft = read_COFT(fnames_map['coft'], EOS)
 
             eleme2 = eleme.copy()
@@ -855,7 +865,7 @@ if __name__ == '__main__':
 
         if r'foft' in fnames_map.keys():
 
-            #Add column names to FOFT
+            #Add column names to foft
             foft_var, foft_idx, foft = read_FOFT(fnames_map['foft'], EOS)
 
             foft_row1 = foft.columns.get_level_values(0).to_list()
@@ -891,8 +901,8 @@ if __name__ == '__main__':
             if r'fflow' in fnames_map.keys():
                 ff.to_excel(writer, sheet_name=r'FFlow')
             if r'coft' in fnames_map.keys():
-                coft.to_excel(writer, sheet_name=r'COFT')
+                coft.to_excel(writer, sheet_name=r'coft')
             if r'foft' in fnames_map.keys():
-                foft.to_excel(writer, sheet_name=r'FOFT')
+                foft.to_excel(writer, sheet_name=r'foft')
 
 
