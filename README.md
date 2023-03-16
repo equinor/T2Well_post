@@ -1,5 +1,6 @@
 # T2Well_post
-A script for post processing T2 well output simulations
+A script for post processing T2 well output simulations.
+The script reads and parses the FStatus, FFlow, COFT and FOFT files and produces plots of the simulation results.
 
 ## Installation:
 
@@ -19,6 +20,7 @@ Download/clone the contents of this repository
   ```
 
 ## Running the script
+
 ```shell
 python plot_T2output.py /path/to/input/file
 ```
