@@ -305,6 +305,14 @@ perm_dict = {-1:'-x', 1:'+x', -2:'-y', 2:'+y', -3:'-z', 3:'+z'}
 
 
 def secondary_scale(log_bool, ax):
+    """
+    Sets a secondary scale with human readable units
+    Takes two parameters
+    log_bool: Boolean set as True if the scale is logarithmic, False if linear
+    ax: The matploltib artist axis
+
+    Returns the input axis with a new secosndary x-axis on top
+    """
     if log_bool:
         ax.set_xscale('log')
 
@@ -375,7 +383,15 @@ def secondary_scale(log_bool, ax):
 
 
 def plot_Ffigure(title,df,df_vars, logscale, eos):
-    """function that plots FStatus and FFlow file"""
+    """
+    Function for plotting the FFlow or FStatus files
+    Takes three parameters
+    title: FStatus or FFlow
+    df: the dataframe corresponding to each file
+    vars: the variables set for plotting
+
+    Returns and save a figure
+    """
     #filter index bars
     index_var = ['WellID',  'Time',  'Dis',  'cumDepth', 'Depth']
     plot_vars = [item for item in df_vars if item not in index_var]
@@ -448,6 +464,16 @@ def plot_Ffigure(title,df,df_vars, logscale, eos):
 
 
 def plot_OFT(title, df, items, df_vars, logscale, mesh_eleme, mesh_conne):
+    """
+    Function for plotting the COFT or FOFT files
+    Takes four parameters
+    title: COFT or FOFT
+    df: the dataframe corresponding to each file
+    items: The connection(s) or element(s) set for plottinh
+    vars: the variables set for plotting
+
+    Returns and save a figure
+    """
     w = 6
     h = (2.8-1)*len(df_vars)
     
