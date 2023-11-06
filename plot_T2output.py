@@ -36,18 +36,21 @@ def read_FStatus(ip_file,eos):
 
     with open(ip_file) as fs:
         next(fs)
-        fs_header = next(fs)
+        fs_labels = next(fs)
     
-    fs_header = fs_header.split('=')[1]
+    fs_labels = fs_labels.split('=')[1]
     
     if eos == 'ECO2N':
-        fs_header = fs_header.split()
+        fs_labels = fs_labels.split()
+        fs_header = fs_labels[2:]
     
     else:
-        fs_header = fs_header.split(",")
-        fs_header = [item.split('(')[0] for item in fs_header]
+        fs_labels = fs_labels.split(",")
+        fs_labels = [item.split('(')[0] for item in fs_labels]
+        fs_header = fs_labels[4:]
 
-    fstatus = pd.read_csv(ip_file, skiprows=3, names=fs_header)
+
+    fstatus = pd.read_csv(ip_file, skiprows=3, names=fs_labels)
     fstatus = fstatus.apply(pd.to_numeric, errors='coerce')
     fstatus = fstatus.fillna(0)
     fstatus['Pres']/= 1e5
@@ -68,23 +71,28 @@ def read_FFlow(ip_file, eos):
     with open(ip_file) as ff:
         if eos != 'ECO2N':
             next(ff)
-        ff_header = next(ff)
+        ff_labels = next(ff)
     
     if eos == 'ECO2N':
-        ff_header = ff_header.split()
+        ff_labels = ff_labels.split()
         r_skip = 1
+
+        ff_header = ff_labels[2:]
     
     else:
-        ff_header = ff_header.split('=')[1]
-        ff_header = ff_header.split(",")
-        ff_header = [item.split('(')[0] for item in ff_header]
-        ff_header.append('V_mix')
+        ff_labels = ff_labels.split('=')[1]
+        ff_labels = ff_labels.split(",")
+        ff_labels = [item.split('(')[0] for item in ff_labels]
+        ff_labels.append('V_mix')
         # add dummy header to column created at the end
-        ff_header.append('trail')
+        ff_labels.append('trail')
         r_skip = 3
 
+        ff_header = ff_labels[4:]
 
-    fflow = pd.read_csv(ip_file, skiprows=r_skip, names=ff_header)
+
+
+    fflow = pd.read_csv(ip_file, skiprows=r_skip, names=ff_labels)
     fflow = fflow.apply(pd.to_numeric, errors='coerce')
     fflow = fflow.fillna(0)
 
@@ -93,7 +101,7 @@ def read_FFlow(ip_file, eos):
         ff_header.pop()
 
 
-    return ff_header[2:], fflow
+    return ff_header, fflow
 
 
 def read_COFT(ip_file, eos):
@@ -548,7 +556,7 @@ def plot_OFT(title, df, items, df_vars, logscale, mesh_eleme, mesh_conne):
 
 def get_EOS(fname):
     """Retrieves EOS from output file"""
-    with open(fname, 'r', encoding='us-ascii') as of:
+    with open(fname, 'r', encoding='latin1') as of:
         lines = of.readlines()
 
     for line in lines:
@@ -732,7 +740,7 @@ if __name__ == '__main__':
 
 
         if plot_f:
-            print('Plotting {:s} data'.format(file))
+            print(f'Plotting {file} data\n')
 
             if ftype in ['fflow', 'fstatus']:
                 queried_vars = plot_dict[ftype]
@@ -740,9 +748,9 @@ if __name__ == '__main__':
             
 
                 df_vars, df = parse_dict[ftype](file, EOS)
-
+                
                 selected_var = df_vars
-                print(selected_var)
+
 
                 if queried_vars != 'all':
                     vars_sel = []
@@ -756,8 +764,9 @@ if __name__ == '__main__':
                                 if var.lower() == var_name.lower():
                                     vars_sel.append(var_name)
                     selected_var = vars_sel
-                
-                print('{:s} plot includes: {:s}'.format(file, ' '.join(selected_var)))
+
+                print(f'Plot for "{file}" includes: {" ".join(selected_var)}')
+
                 plot_Ffigure(ftype, df,selected_var, logscale, EOS)
 
 

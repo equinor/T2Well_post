@@ -105,6 +105,9 @@ celerybeat.pid
 sample_files/*.png
 sample_files/*.xlsx
 
+# Filesystem artifacts
+*Thumbs.db
+
 # Environments
 .env
 .venv
