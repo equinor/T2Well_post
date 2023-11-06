@@ -548,7 +548,7 @@ def plot_OFT(title, df, items, df_vars, logscale, mesh_eleme, mesh_conne):
 
 def get_EOS(fname):
     """Retrieves EOS from output file"""
-    with open(fname, 'r', errors='replace') as of:
+    with open(fname, 'r', encoding='us-ascii') as of:
         lines = of.readlines()
 
     for line in lines:

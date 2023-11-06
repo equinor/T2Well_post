@@ -101,8 +101,9 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
-#Image files output
+# files output
 sample_files/*.png
+sample_files/*.xlsx
 
 # Environments
 .env
