@@ -129,7 +129,7 @@ def read_COFT(ip_file, eos):
         coft_var = ['FLO(GAS)', 'FLO(aq.)', 'VEL(GAS)', 'VEL(LIQ.)', 'FLO(NaCl)' , 'FLO(CO2)' ,'FLOH']
         c_idx_df = coft.loc[:,2::8]
     else:
-        coft_var = ['var1', 'var2', 'var3', 'var4']
+        coft_var = ['FLO(aq.)', 'FLO(LIQ.)', 'FLO(GAS)', 'FLO(CO2)']
         c_idx_df = coft.loc[:,2::5]
 
 
@@ -296,13 +296,13 @@ def read_ipMESH(fname):
 #Plotting functions
 
 name_variable = ['Depth', 'Dis', 'cumDepth', 'Dgas', 'D_aqueous' , 'D_liquid', 'D_gas', 'FLO(CO2)', 'FLO(GAS)', 
-                'FLO(NaCl)', 'FLO(aq.)',  'q_aqueous', 'q_liquid', 'q_gas' , 'FLOH', 'Fgas', 
+                'FLO(NaCl)', 'FLO(aq.)', 'FLO(LIQ.)',  'q_aqueous', 'q_liquid', 'q_gas' , 'FLOH', 'Fgas', 
                 'Fliq', 'Pres', 'Sg', 'S_aqueous', 'S_liquid', 'S_gas', 'T', 'Time', 
                 'Umix', 'VEL(GAS)', 'VEL(LIQ.)', 'VGas',  'V_aqueous', 'V_liquid', 'V_gas', 'V_mix',
                 'VLiq', 'XCO2liq', 'XNACL', 'var1', 'var2', 'var3', 'var4', 'WellID']
 
-unit_variable = ['m']*3 +    4*['kg/m$^3$'] + 7*['kg/s'] + ['W'] + 2*['kg/s'] + ['bar'] + ['m$^3$/m$^3$']*4 + ['$\degree$C', 's'] + 9*['m/s'] + 2*['kg/kg'] + 5*['-']
-unit_variable_v2 = ['m']*3 + 4*['kg/m3']    + 7*['kg/s'] + ['W'] + 2*['kg/s'] + ['bar'] + ['m3/m3'      ]*4 + ['degC', 's']       + 9*['m/s'] + 2*['kg/kg'] + 5*['-']
+unit_variable = ['m']*3 +    4*['kg/m$^3$'] + 8*['kg/s'] + ['W'] + 2*['kg/s'] + ['bar'] + ['m$^3$/m$^3$']*4 + ['$\degree$C', 's'] + 9*['m/s'] + 2*['kg/kg'] + 5*['-']
+unit_variable_v2 = ['m']*3 + 4*['kg/m3']    + 8*['kg/s'] + ['W'] + 2*['kg/s'] + ['bar'] + ['m3/m3'      ]*4 + ['degC', 's']       + 9*['m/s'] + 2*['kg/kg'] + 5*['-']
 
 unit_lims = {'Sg':(0,1)}
 
