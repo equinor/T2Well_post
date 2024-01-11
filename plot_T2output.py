@@ -822,7 +822,7 @@ def plotter_manager(fnames_map, plot_bool, eleme, conne):
 
 
             elif ftype in ['coft', 'foft']:
-                print(plot_dict)
+                # print(plot_dict)
 
                 queried_vars = plot_dict[ftype]['var']
                 queried_items = plot_dict[ftype]['item']
@@ -889,10 +889,12 @@ if __name__ == '__main__':
     plot_bool = dict()
     fnames_map=dict()
 
+    #Map out files linked to input file
     for f in os.listdir():
         if f.lower().startswith(raw_names):
             f_size = os.path.getsize(f)
             if f_size>0:
+                # print(f'{f} file exists and will be added to fnames_map and plot_bool')
                 fnames.append(f)
                 flabel = f.lower().split('_')[0]
                 fnames_map[flabel] = f
@@ -904,14 +906,19 @@ if __name__ == '__main__':
         elif f.endswith('out'):
             op_file = f
 
+
     EOS = get_EOS(op_file)
-    print('Input file: {:s}'.format(ip_file))
+    print(f'T2Well input file: {ip_file}')
+    print(f'T2Well output file: {op_file}')
     print('EOS version: {:s}'.format(EOS))
 
     #Define horizontal scale type
     if 'log' in args:
+        print('Plots will be plot in logarithmic scale')
         logscale = True
         args.remove('log')
+    else:
+        print('Plots will be plot in linear scale')
 
 
     #Define how files will be parsed
@@ -930,8 +937,8 @@ if __name__ == '__main__':
 
     #Define which files and variables will be plotted
     plot_bool, plot_dict = plot_specs(args, plot_bool, fnames)
-    print(f'plot_bool is {plot_bool}')
-    print(f'plot_dict is {plot_dict}')
+    # print(f'plot_bool is {plot_bool}')
+    # print(f'plot_dict is {plot_dict}')
 
     eleme, conne = read_ipMESH(ip_file)
 
@@ -940,7 +947,7 @@ if __name__ == '__main__':
 
     #Query and index data
 
-    print(f'fnames_map is {fnames_map}')
+    # print(f'fnames_map is {fnames_map}')
 
     #Print data in spreadsheet
     print_Excel = True
