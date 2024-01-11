@@ -661,10 +661,9 @@ def plot_specs(ip_args, plot_bool, files):
     return plot_bool, plot_dict
 
 
-def Excel_printer(fnames_map, ip_file):
+def Excel_printer(fnames_map, ip_file, eleme, conne):
     spreadsheet = ip_file.split(".")[0]+".xlsx"
     pd_units = pd.Series(units_dict_v2)
-
     
     if r'fstatus' in fnames_map.keys():
         #Add column names to FStatus
@@ -765,80 +764,8 @@ def Excel_printer(fnames_map, ip_file):
 
 
 
-if __name__ == '__main__':
-    args = sys.argv
-    print(args)
-    logscale = False
-
-    ip_path = args[1]
-    ip_dirname = os.path.dirname(ip_path)
-
-    old_path = os.getcwd()
-
-    if len(ip_dirname)>0:
-        os.chdir(ip_dirname)
-
-    
-    raw_names = tuple([r'fflow', r'fstatus', r'coft', r'foft'])
-    fnames = []
-    plot_bool = dict()
-    fnames_map=dict()
-
-    for f in os.listdir():
-        if f.lower().startswith(raw_names):
-            f_size = os.path.getsize(f)
-            if f_size>0:
-                fnames.append(f)
-                flabel = f.lower().split('_')[0]
-                fnames_map[flabel] = f
-                plot_bool[flabel] = True
-
-        elif f.endswith(tuple(['.in', '.inp'])):
-            ip_file = f
-
-        elif f.endswith('out'):
-            op_file = f
-
-    EOS = get_EOS(op_file)
-    print('Input file: {:s}'.format(ip_file))
-    print('EOS version: {:s}'.format(EOS))
-
-    #Define horizontal scale type
-    if 'log' in args:
-        logscale = True
-        args.remove('log')
-
-
-    #Define how files will be parsed
-    parse_dict = dict()
-
-    for file in fnames_map:
-        if file.lower().startswith('fflow'):
-            parse_dict[file]=read_FFlow
-        elif file.lower().startswith('fstatus'):
-            parse_dict[file]=read_FStatus
-        elif file.startswith('coft'):
-            parse_dict[file]=read_COFT
-        elif file.startswith('foft'):
-            parse_dict[file]=read_FOFT
-
-
-    #Define which files and variables will be plotted
-    plot_bool, plot_dict = plot_specs(args, plot_bool, fnames)
-    print(f'plot_bool is {plot_bool}')
-    print(f'plot_dict is {plot_dict}')
-
-
-
-    eleme, conne = read_ipMESH(ip_file)
-    
-
-    #Query and index data
-
-    print(f'fnames_map is {fnames_map}')
-
-
-    for ftype in fnames_map:
+def plotter_manager(fnames_map, plot_bool, eleme, conne):
+    for ftype in fnames_map:    
         
         """debugging
         print(f'filetype {ftype} is named {fnames_map[ftype]}')
@@ -935,12 +862,78 @@ if __name__ == '__main__':
                 plot_OFT(ftype, df, selected_items, selected_var, logscale, mesh_eleme=eleme, mesh_conne=conne)
 
 
+if __name__ == '__main__':
+    args = sys.argv
+    print(args)
+    logscale = False
 
+    ip_path = args[1]
+    ip_dirname = os.path.dirname(ip_path)
+
+    old_path = os.getcwd()
+
+    if len(ip_dirname)>0:
+        os.chdir(ip_dirname)
 
     
+    raw_names = tuple([r'fflow', r'fstatus', r'coft', r'foft'])
+    fnames = []
+    plot_bool = dict()
+    fnames_map=dict()
+
+    for f in os.listdir():
+        if f.lower().startswith(raw_names):
+            f_size = os.path.getsize(f)
+            if f_size>0:
+                fnames.append(f)
+                flabel = f.lower().split('_')[0]
+                fnames_map[flabel] = f
+                plot_bool[flabel] = True
+
+        elif f.endswith(tuple(['.in', '.inp'])):
+            ip_file = f
+
+        elif f.endswith('out'):
+            op_file = f
+
+    EOS = get_EOS(op_file)
+    print('Input file: {:s}'.format(ip_file))
+    print('EOS version: {:s}'.format(EOS))
+
+    #Define horizontal scale type
+    if 'log' in args:
+        logscale = True
+        args.remove('log')
+
+
+    #Define how files will be parsed
+    parse_dict = dict()
+
+    for file in fnames_map:
+        if file.lower().startswith('fflow'):
+            parse_dict[file]=read_FFlow
+        elif file.lower().startswith('fstatus'):
+            parse_dict[file]=read_FStatus
+        elif file.startswith('coft'):
+            parse_dict[file]=read_COFT
+        elif file.startswith('foft'):
+            parse_dict[file]=read_FOFT
+
+
+    #Define which files and variables will be plotted
+    plot_bool, plot_dict = plot_specs(args, plot_bool, fnames)
+    print(f'plot_bool is {plot_bool}')
+    print(f'plot_dict is {plot_dict}')
+
+    eleme, conne = read_ipMESH(ip_file)
 
     
-            
+    plotter_manager(fnames_map, plot_bool, eleme, conne)
+
+    #Query and index data
+
+    print(f'fnames_map is {fnames_map}')
+
 
     print_Excel = True
 
@@ -952,7 +945,7 @@ if __name__ == '__main__':
 
    
     if print_Excel:
-        Excel_printer(fnames_map, ip_file)
+        Excel_printer(fnames_map, ip_file, eleme, conne)
 
 
 
