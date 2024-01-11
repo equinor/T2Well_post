@@ -400,6 +400,8 @@ def plot_Ffigure(title,df,df_vars, logscale, EOS):
     title: FStatus or FFlow
     df: the dataframe corresponding to each file
     vars: the variables set for plotting
+    logscale: boolean if the plot is needed in logscale
+    EOS: Specifics about the naming of variables
 
     Returns and save a figure
     """
@@ -481,7 +483,11 @@ def plot_OFT(title, df, items, df_vars, logscale, mesh_eleme, mesh_conne):
     title: COFT or FOFT
     df: the dataframe corresponding to each file
     items: The connection(s) or element(s) set for plottinh
-    vars: the variables set for plotting
+    df_vars: the variables set for plotting
+
+    logscale: boolean if the plot is needed in logscale
+    mesh_eleme: table with grid elements
+    mesl_conne: table with grid connections
 
     Returns and save a figure
     """
@@ -662,6 +668,7 @@ def plot_specs(ip_args, plot_bool, files):
 
 
 def Excel_printer(fnames_map, ip_file, eleme, conne):
+    """Orchestrates the printing of tables on a spreadsheet"""
     spreadsheet = ip_file.split(".")[0]+".xlsx"
     pd_units = pd.Series(units_dict_v2)
     
@@ -765,6 +772,7 @@ def Excel_printer(fnames_map, ip_file, eleme, conne):
 
 
 def plotter_manager(fnames_map, plot_bool, eleme, conne):
+    """Orchestrates the plotting of figures"""
     for ftype in fnames_map:    
         
         """debugging
@@ -934,7 +942,7 @@ if __name__ == '__main__':
 
     print(f'fnames_map is {fnames_map}')
 
-
+    #Print data in spreadsheet
     print_Excel = True
 
     xls_output = input('Do you want to store output files as spreadsheet (Y/N). Default is Yes?\t')
