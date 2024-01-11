@@ -10,6 +10,9 @@ import sys
 import pandas as pd
 import numpy as np
 
+import argparse
+
+
 plt.style.use('seaborn-white')
 
 
@@ -390,7 +393,7 @@ def secondary_scale(log_bool, ax):
 
 
 
-def plot_Ffigure(title,df,df_vars, logscale, eos):
+def plot_Ffigure(title,df,df_vars, logscale, EOS):
     """
     Function for plotting the FFlow or FStatus files
     Takes three parameters
@@ -658,6 +661,108 @@ def plot_specs(ip_args, plot_bool, files):
     return plot_bool, plot_dict
 
 
+def Excel_printer(fnames_map, ip_file):
+    spreadsheet = ip_file.split(".")[0]+".xlsx"
+    pd_units = pd.Series(units_dict_v2)
+
+    
+    if r'fstatus' in fnames_map.keys():
+        #Add column names to FStatus
+
+        fs_var, fs = read_FStatus(fnames_map['fstatus'], EOS)
+        fs_row1 = fs.columns.to_list()
+        fs_row2 = pd_units[fs_row1].to_list()
+
+        fs_cols = pd.MultiIndex.from_tuples(list(zip( fs_row1, fs_row2)))
+
+        fs.columns = fs_cols
+
+
+    if r'fflow' in fnames_map.keys():
+
+        #Add column names to FFlow
+
+        ff_var, ff = read_FFlow(fnames_map['fflow'], EOS)
+        ff_row1 = ff.columns.to_list()
+        ff_row2 = pd_units[ff_row1].to_list()
+
+        ff_cols = pd.MultiIndex.from_tuples(list(zip( ff_row1, ff_row2)))
+
+        ff.columns = ff_cols
+
+
+    if r'coft' in fnames_map.keys():
+
+        #Add column names to coft
+        coft_var, coft_idx, coft = read_COFT(fnames_map['coft'], EOS)
+
+        eleme2 = eleme.copy()
+        eleme2 = eleme2.set_index('ElName')
+
+
+        query_x = conne['ISOT']==1
+        query_y = conne['ISOT']==2
+        query_z = conne['ISOT']==3
+
+
+
+
+
+        coft_row1 = coft.columns.get_level_values(0).to_list()
+        coft_row2 = (conne.loc[coft_row1[1:],'EL1']+conne.loc[coft_row1[1:],'EL2']).to_list()
+        coft_row2 = [''] + coft_row2
+        coft_row3 = coft.columns.get_level_values(1).to_list()
+        coft_row4 = ['s'] + list(pd_units[coft.columns.get_level_values(1)[1:].to_list()].values)
+
+        coft_cols = pd.MultiIndex.from_tuples(list(zip( coft_row1, 
+                                                        coft_row2, 
+                                                        coft_row3,
+                                                        coft_row4)))
+
+        coft.columns = coft_cols
+
+    if r'foft' in fnames_map.keys():
+
+        #Add column names to foft
+        foft_var, foft_idx, foft = read_FOFT(fnames_map['foft'], EOS)
+
+        foft_row1 = foft.columns.get_level_values(0).to_list()
+        foft_row1[0] = 'cell_idx'
+
+        foft_row2 = eleme.loc[foft_row1[1:],'ElName'].to_list()
+        foft_row2 = ['cell_name'] + foft_row2
+
+        foft_row2a = ['cell_X [m]'] + eleme.loc[foft_row1[1:], 'X'].to_list()
+        foft_row2b = ['cell_Y [m]'] + eleme.loc[foft_row1[1:], 'Y'].to_list()
+        foft_row2c = ['cell_Z [m]'] + eleme.loc[foft_row1[1:], 'Z'].to_list()
+        foft_row2d = ['cell_mat'] + eleme.loc[foft_row1[1:], 'MAT'].to_list()
+
+        foft_row3 = foft.columns.get_level_values(1).to_list()
+        foft_row3[0] = 'time'
+        foft_row4 = ['s'] + list(pd_units[foft.columns.get_level_values(1)[1:].to_list()].values)
+
+        foft_cols = pd.MultiIndex.from_tuples(list(zip( foft_row1, 
+                                                        foft_row2, 
+                                                        foft_row2a, 
+                                                        foft_row2b, 
+                                                        foft_row2c, 
+                                                        foft_row2d, 
+                                                        foft_row3,
+                                                        foft_row4)))
+
+        foft.columns = foft_cols
+
+
+    with pd.ExcelWriter(spreadsheet) as writer:
+        if r'fstatus' in fnames_map.keys():
+            fs.to_excel(writer, sheet_name=r'FStatus')
+        if r'fflow' in fnames_map.keys():
+            ff.to_excel(writer, sheet_name=r'FFlow')
+        if r'coft' in fnames_map.keys():
+            coft.to_excel(writer, sheet_name=r'coft')
+        if r'foft' in fnames_map.keys():
+            foft.to_excel(writer, sheet_name=r'foft')
+
 
 
 if __name__ == '__main__':
@@ -720,9 +825,8 @@ if __name__ == '__main__':
 
     #Define which files and variables will be plotted
     plot_bool, plot_dict = plot_specs(args, plot_bool, fnames)
-    print(plot_bool)
-    print()
-    print(plot_dict)
+    print(f'plot_bool is {plot_bool}')
+    print(f'plot_dict is {plot_dict}')
 
 
 
@@ -731,12 +835,22 @@ if __name__ == '__main__':
 
     #Query and index data
 
+    print(f'fnames_map is {fnames_map}')
+
 
     for ftype in fnames_map:
+        
+        """debugging
+        print(f'filetype {ftype} is named {fnames_map[ftype]}')
+        if plot_bool[ftype]:
+            print(f'{ftype} will be plotted')
+        else:
+            print(f'{ftype} will not be plotted')
+        """
+    
+        file = fnames_map[ftype] #filename
 
-        file = fnames_map[ftype]
-
-        plot_f = plot_bool[ftype]
+        plot_f = plot_bool[ftype] #check if file will be included in plot
 
 
         if plot_f:
@@ -825,7 +939,7 @@ if __name__ == '__main__':
 
     
 
-    spreadsheet = ip_file.split(".")[0]+".xlsx"
+    
             
 
     print_Excel = True
@@ -834,106 +948,11 @@ if __name__ == '__main__':
 
     if xls_output.lower().startswith('n'):
         print_Excel = False
-        
+
+
+   
     if print_Excel:
-        pd_units = pd.Series(units_dict_v2)
+        Excel_printer(fnames_map, ip_file)
 
-        
-        if r'fstatus' in fnames_map.keys():
-            #Add column names to FStatus
-
-            fs_var, fs = read_FStatus(fnames_map['fstatus'], EOS)
-            fs_row1 = fs.columns.to_list()
-            fs_row2 = pd_units[fs_row1].to_list()
-
-            fs_cols = pd.MultiIndex.from_tuples(list(zip( fs_row1, fs_row2)))
-
-            fs.columns = fs_cols
-
-
-        if r'fflow' in fnames_map.keys():
-
-            #Add column names to FFlow
-
-            ff_var, ff = read_FFlow(fnames_map['fflow'], EOS)
-            ff_row1 = ff.columns.to_list()
-            ff_row2 = pd_units[ff_row1].to_list()
-
-            ff_cols = pd.MultiIndex.from_tuples(list(zip( ff_row1, ff_row2)))
-
-            ff.columns = ff_cols
-
-
-        if r'coft' in fnames_map.keys():
-
-            #Add column names to coft
-            coft_var, coft_idx, coft = read_COFT(fnames_map['coft'], EOS)
-
-            eleme2 = eleme.copy()
-            eleme2 = eleme2.set_index('ElName')
-
-
-            query_x = conne['ISOT']==1
-            query_y = conne['ISOT']==2
-            query_z = conne['ISOT']==3
-
-
-
-
-
-            coft_row1 = coft.columns.get_level_values(0).to_list()
-            coft_row2 = (conne.loc[coft_row1[1:],'EL1']+conne.loc[coft_row1[1:],'EL2']).to_list()
-            coft_row2 = [''] + coft_row2
-            coft_row3 = coft.columns.get_level_values(1).to_list()
-            coft_row4 = ['s'] + list(pd_units[coft.columns.get_level_values(1)[1:].to_list()].values)
-
-            coft_cols = pd.MultiIndex.from_tuples(list(zip( coft_row1, 
-                                                            coft_row2, 
-                                                            coft_row3,
-                                                            coft_row4)))
-
-            coft.columns = coft_cols
-
-        if r'foft' in fnames_map.keys():
-
-            #Add column names to foft
-            foft_var, foft_idx, foft = read_FOFT(fnames_map['foft'], EOS)
-
-            foft_row1 = foft.columns.get_level_values(0).to_list()
-            foft_row1[0] = 'cell_idx'
-
-            foft_row2 = eleme.loc[foft_row1[1:],'ElName'].to_list()
-            foft_row2 = ['cell_name'] + foft_row2
-
-            foft_row2a = ['cell_X [m]'] + eleme.loc[foft_row1[1:], 'X'].to_list()
-            foft_row2b = ['cell_Y [m]'] + eleme.loc[foft_row1[1:], 'Y'].to_list()
-            foft_row2c = ['cell_Z [m]'] + eleme.loc[foft_row1[1:], 'Z'].to_list()
-            foft_row2d = ['cell_mat'] + eleme.loc[foft_row1[1:], 'MAT'].to_list()
-
-            foft_row3 = foft.columns.get_level_values(1).to_list()
-            foft_row3[0] = 'time'
-            foft_row4 = ['s'] + list(pd_units[foft.columns.get_level_values(1)[1:].to_list()].values)
-
-            foft_cols = pd.MultiIndex.from_tuples(list(zip( foft_row1, 
-                                                            foft_row2, 
-                                                            foft_row2a, 
-                                                            foft_row2b, 
-                                                            foft_row2c, 
-                                                            foft_row2d, 
-                                                            foft_row3,
-                                                            foft_row4)))
-
-            foft.columns = foft_cols
-
-
-        with pd.ExcelWriter(spreadsheet) as writer:
-            if r'fstatus' in fnames_map.keys():
-                fs.to_excel(writer, sheet_name=r'FStatus')
-            if r'fflow' in fnames_map.keys():
-                ff.to_excel(writer, sheet_name=r'FFlow')
-            if r'coft' in fnames_map.keys():
-                coft.to_excel(writer, sheet_name=r'coft')
-            if r'foft' in fnames_map.keys():
-                foft.to_excel(writer, sheet_name=r'foft')
 
 
