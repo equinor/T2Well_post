@@ -24,12 +24,20 @@ Download/clone the contents of this repository
 By typing the line below, the script will produce 4 figures (1 per file), including all variables reported in the files. For the specific case of COFT and FOFT, the figures will include all items (mesh elements and connections).
 
 ```shell
-python plot_T2output.py /path/to/input/file
+#short form
+python plot_T2output.py -p /path/to/input/file
+
+#long form
+python plot_T2output.py --input_file /path/to/input/file
 ```
 
 If the user wants to plot fewer variables or fewer items you can type commands such as the one below:
 ```shell
-python plot_T2output.py /path/to/input/file FStatus,1,3,4 FFlow COFT,1,3 FOFT,i,4,5
+#short form
+python plot_T2output.py -p /path/to/input/file -fst -fst_var 1 3 4 -ffl -c -c_var 1 3 -f -f_item 4 5
+
+#long form
+python plot_T2output.py --input_file /path/to/input/file --FStatus -FStatus_vectors 1 3 4 --FFlow --COFT --COFT_vectors 1 3 --FOFT -FOFT_elements 4 5
 ```
 
 For this particular example, note the inclusion of the letter “i" after the FOFT line. Such letter can be used for both COFT and FOFT. Anything before it refers to the variables included in the file. Anything after refers to the elements or connections.
