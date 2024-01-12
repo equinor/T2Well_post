@@ -24,23 +24,6 @@ rcParams['font.size'] = 6
 rcParams['lines.linewidth'] = 0.75
 
 
-#### Global variables
-
-NAME_VARIABLE = ['Depth', 'Dis', 'cumDepth', 'Dgas', 'D_aqueous' , 'D_liquid', 'D_gas', 'FLO(CO2)', 'FLO(GAS)', 
-                'FLO(NaCl)', 'FLO(aq.)', 'FLO(LIQ.)',  'q_aqueous', 'q_liquid', 'q_gas' , 'FLOH', 'Fgas', 
-                'Fliq', 'Pres', 'Sg', 'S_aqueous', 'S_liquid', 'S_gas', 'T', 'Time', 
-                'Umix', 'VEL(GAS)', 'VEL(LIQ.)', 'VGas',  'V_aqueous', 'V_liquid', 'V_gas', 'V_mix',
-                'VLiq', 'XCO2liq', 'XNACL', 'var1', 'var2', 'var3', 'var4', 'WellID']
-
-UNIT_VARIABLE_SCREEN = ['m']*3 +    4*['kg/m$^3$'] + 8*['kg/s'] + ['W'] + 2*['kg/s'] + ['bar'] + ['m$^3$/m$^3$']*4 + ['$\degree$C', 's'] + 9*['m/s'] + 2*['kg/kg'] + 5*['-']
-UNIT_VARIABLE_PRINT = ['m']*3 + 4*['kg/m3']    + 8*['kg/s'] + ['W'] + 2*['kg/s'] + ['bar'] + ['m3/m3'      ]*4 + ['degC', 's']       + 9*['m/s'] + 2*['kg/kg'] + 5*['-']
-
-UNIT_LIMITS = {'Sg':(0,1)}
-
-UNITS_DICT_SCREEN = dict(zip(NAME_VARIABLE,UNIT_VARIABLE_SCREEN))
-UNITS_DICT_PRINT = dict(zip(NAME_VARIABLE,UNIT_VARIABLE_PRINT))
-
-PERMEABILITY_DICT = {-1:'-x', 1:'+x', -2:'-y', 2:'+y', -3:'-z', 3:'+z'}
 
 
 #### Parsing functions
@@ -315,6 +298,21 @@ def read_ipMESH(fname):
 
 #Plotting functions
 
+name_variable = ['Depth', 'Dis', 'cumDepth', 'Dgas', 'D_aqueous' , 'D_liquid', 'D_gas', 'FLO(CO2)', 'FLO(GAS)', 
+                'FLO(NaCl)', 'FLO(aq.)', 'FLO(LIQ.)',  'q_aqueous', 'q_liquid', 'q_gas' , 'FLOH', 'Fgas', 
+                'Fliq', 'Pres', 'Sg', 'S_aqueous', 'S_liquid', 'S_gas', 'T', 'Time', 
+                'Umix', 'VEL(GAS)', 'VEL(LIQ.)', 'VGas',  'V_aqueous', 'V_liquid', 'V_gas', 'V_mix',
+                'VLiq', 'XCO2liq', 'XNACL', 'var1', 'var2', 'var3', 'var4', 'WellID']
+
+unit_variable = ['m']*3 +    4*['kg/m$^3$'] + 8*['kg/s'] + ['W'] + 2*['kg/s'] + ['bar'] + ['m$^3$/m$^3$']*4 + ['$\degree$C', 's'] + 9*['m/s'] + 2*['kg/kg'] + 5*['-']
+unit_variable_v2 = ['m']*3 + 4*['kg/m3']    + 8*['kg/s'] + ['W'] + 2*['kg/s'] + ['bar'] + ['m3/m3'      ]*4 + ['degC', 's']       + 9*['m/s'] + 2*['kg/kg'] + 5*['-']
+
+unit_lims = {'Sg':(0,1)}
+
+units_dict = dict(zip(name_variable,unit_variable))
+units_dict_v2 = dict(zip(name_variable,unit_variable_v2))
+
+perm_dict = {-1:'-x', 1:'+x', -2:'-y', 2:'+y', -3:'-z', 3:'+z'}
 
 
 def secondary_scale(log_bool, ax):
@@ -439,7 +437,7 @@ def plot_Ffigure(title,df,df_vars, logscale, EOS):
 
         #Define limits for saturation variables
         if var in ['Sg', 'S_aqueous', 'S_liquid', 'S_gas']:
-            UNIT_LIMITS[var] = (0,1)
+            unit_lims[var] = (0,1)
 
 
         if len(plot_vars)>1:
@@ -452,14 +450,14 @@ def plot_Ffigure(title,df,df_vars, logscale, EOS):
         
 
         try:
-            cf = ax.contourf(X, Y, Z, vmin = UNIT_LIMITS[var][0], vmax = UNIT_LIMITS[var][1])
+            cf = ax.contourf(X, Y, Z, vmin = unit_lims[var][0], vmax = unit_lims[var][1])
             cb = plt.colorbar(ScalarMappable(norm=cf.norm, cmap=cf.cmap), ax=ax,
-                                ticks=np.linspace(UNIT_LIMITS[var][0], UNIT_LIMITS[var][1], 6))
+                                ticks=np.linspace(unit_lims[var][0], unit_lims[var][1], 6))
         except:
             cf = ax.contourf(X, Y, Z)
             cb = plt.colorbar(cf, ax=ax)
         
-        cb.set_label('{:s} [{:s}]'.format(var,UNITS_DICT_SCREEN[var]))
+        cb.set_label('{:s} [{:s}]'.format(var,units_dict[var]))
         ax.set_ylabel('depth [m]')
 
         ax.invert_yaxis()
@@ -527,7 +525,7 @@ def plot_OFT(title, df, items, df_vars, logscale, mesh_eleme, mesh_conne):
 
                 mat1 = mesh_eleme_v2.loc[el1,'MAT']
                 mat2 = mesh_eleme_v2.loc[el2,'MAT']
-                item_label =  '{:s}>{:s}({:s} to {:s} in {:s} dir.)'.format(el1,el2,mat1, mat2, PERMEABILITY_DICT[k_dir])
+                item_label =  '{:s}>{:s}({:s} to {:s} in {:s} dir.)'.format(el1,el2,mat1, mat2, perm_dict[k_dir])
 
 
 
@@ -546,7 +544,7 @@ def plot_OFT(title, df, items, df_vars, logscale, mesh_eleme, mesh_conne):
 
         
         
-        ax.set_ylabel('{:s} [{:s}]'.format(var, UNITS_DICT_SCREEN[var]))
+        ax.set_ylabel('{:s} [{:s}]'.format(var, units_dict[var]))
         
     if title == 'foft':
         ax.set_yscale('log')
@@ -580,82 +578,100 @@ def plot_specs(ip_args, plot_bool, files):
     """Defines the files and variables that will be plotted"""   
     plot_dict = dict()
 
-    #Check for FStatus
-    if ip_args.FStatus:
-        plot_bool['fstatus'] = True
-
-        if ip_args.FStatus_vectors is None:
-            plot_dict['fstatus'] = 'all'
+    if len(ip_args)>2:
         
-        else:
-            plot_dict['fstatus'] = ip_args.FStatus_vectors
+        #Turn off all plotting
+        for f in plot_bool:
+            plot_bool[f] = False
+
+
+        #Based on arguments turn on the selected files to plot
+
+        for arg in ip_args[2:]:
+        
+            arg = arg.split('i')
+            arg_v = arg[0].strip(",").split(",")
+
+            try:
+                arg_i = arg[1].strip(",").split(",")
+            except:
+                arg_i = None
+
+            print('file queried:', arg_v)
+            print('items queried:', arg_i)
+
+            #Check if FStatus is being queried
+            if any(item.lower().startswith('fstatus') for item in files) and arg_v[0].lower() == r'fstatus':
+                plot_bool[r'fstatus'] = True
+                if len(arg_v)>1:
+                    plot_dict[r'fstatus'] = arg_v[1:]
+                else:
+                    plot_dict[r'fstatus'] = 'all'
+                    
+
+            #Check if FFLow is being queried
+            if any(item.lower().startswith('fflow') for item in files) and arg_v[0].lower() == r'fflow':
+
+                plot_bool[r'fflow'] = True
+
+                if len(arg_v)>1:
+                    plot_dict[r'fflow'] = arg_v[1:]
+                else:
+                    plot_dict[r'fflow'] = 'all'
+
+
+            #Check if coft is being queried
+            elif any(item.startswith('COFT') for item in files) and arg_v[0].lower() == r'coft':
+                plot_bool[r'coft'] = True
+                plot_dict[r'coft'] = dict()
+                if len(arg_v)>1:
+                    plot_dict[r'coft']['var'] = arg_v[1:]
+                else:
+                    plot_dict[r'coft']['var'] = 'all'
+
+                if arg_i is None:
+                    plot_dict[r'coft']['item'] = 'all'
+                else:
+                    plot_dict[r'coft']['item'] = arg_i
+                
+
+            #Check if foft is being queried
+            elif any(item.startswith('FOFT') for item in files) and arg_v[0].lower() == r'foft':
+
+                plot_bool[r'foft'] = True
+                plot_dict[r'foft'] = dict()
+                if len(arg_v)>1:
+                    plot_dict[r'foft']['var'] = arg_v[1:]
+                else:
+                    plot_dict[r'foft']['var'] = 'all'
+
+                if arg_i is None:
+                    plot_dict[r'foft']['item'] = 'all'
+                else:
+                    plot_dict[r'foft']['item'] = arg_i
+
+        
+
 
     else:
-        plot_bool['fstatus'] = False
 
-    #Check for FFlow
-    if ip_args.FFlow:
-        plot_bool['fflow'] = True
+        for f in plot_bool:
 
-        if ip_args.FFlow_vectors is None:
-            plot_dict['fflow'] = 'all'
-        
-        else:
-            plot_dict['fflow'] = ip_args.FFlow_vectors
+            plot_dict[f] = 'all'
 
-    else:
-        plot_bool['fflow'] = False    
-
-    #Check for COFT
-    if ip_args.COFT:
-        plot_bool['coft'] = True
-        plot_dict['coft'] = dict()
-
-        if ip_args.COFT_vectors is None:
-            plot_dict['coft']['var'] = 'all'
-        
-        else:
-            plot_dict['coft']['var'] = ip_args.COFT_vectors
-
-        if ip_args.COFT_connections is None:
-            plot_dict['coft']['item'] = 'all'
-        
-        else:
-            plot_dict['coft']['item'] = ip_args.COFT_connections
-    else:
-        plot_bool['coft'] = False        
-
-        
-    #Check for FOFT
-    if ip_args.FOFT:
-        plot_bool['foft'] = True
-        plot_dict['foft'] = dict()
-
-        if ip_args.FOFT_vectors is None:
-            plot_dict['foft']['var'] = 'all'
-        
-        else:
-            plot_dict['foft']['var'] = ip_args.FOFT_vectors
-
-        if ip_args.FOFT_elements is None:
-            plot_dict['foft']['item'] = 'all'
-        
-        else:
-            plot_dict['foft']['item'] = ip_args.FOFT_elements
-
-    else:
-        plot_bool['foft'] = False    
+            if f in ['coft', 'foft']:
+                plot_dict[f]=dict()
+                plot_dict[f]['var'] = 'all'
+                plot_dict[f]['item'] = 'all'
+    
 
     return plot_bool, plot_dict
-
-
-
 
 
 def Excel_printer(fnames_map, ip_file, eleme, conne):
     """Orchestrates the printing of tables on a spreadsheet"""
     spreadsheet = ip_file.split(".")[0]+".xlsx"
-    pd_units = pd.Series(UNITS_DICT_PRINT)
+    pd_units = pd.Series(units_dict_v2)
     
     if r'fstatus' in fnames_map.keys():
         #Add column names to FStatus
@@ -856,84 +872,11 @@ def plotter_manager(fnames_map, plot_bool, eleme, conne):
 
 
 if __name__ == '__main__':
-    # args = sys.argv
-    # print(args)
+    args = sys.argv
+    print(args)
+    logscale = False
 
-    # Create the parser
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('-p', 
-                        "--input_file", 
-                        type=str, 
-                        required=True,
-                        help = 'The T2Well simulation input file')
-
-    parser.add_argument('-logx', 
-                        "--log_scale_x",
-                        action='store_true',
-                        help = 'Define if a logarithmic X scale is required')
-    
-    parser.add_argument('-fst', 
-                        "--FStatus",
-                        action='store_false',
-                        help = 'Define if FStatus is included')
-
-    parser.add_argument('-fst_var', 
-                        "--FStatus_vectors",
-                        nargs='+',
-                        help = 'Define which vectors of FStatus are included')
-
-    parser.add_argument('-ffl', 
-                        "--FFlow",
-                        action='store_false',
-                        help = 'Define if FFlow is included')
-
-    parser.add_argument('-ffl_var', 
-                        "--FFlow_vectors",
-                        nargs='+',
-                        help = 'Define which vectors of FFlow are included')
-
-    parser.add_argument('-c', 
-                        "--COFT",
-                        action='store_false',
-                        help = 'Define if COFT is included')
-    
-    parser.add_argument('-c_var', 
-                        "--COFT_vectors",
-                        nargs='+',
-                        help = 'Define which vectors of COFT are included')
-
-    parser.add_argument('-c_item', 
-                        "--COFT_connections",
-                        nargs='+',
-                        help = 'Define which connections of COFT are included')
-
-
-    parser.add_argument('-f', 
-                        "--FOFT",
-                        action='store_false',
-                        help = 'Define if FOFT is included')
-    
-    parser.add_argument('-f_var', 
-                        "--FOFT_vectors",
-                        nargs='+',
-                        help = 'Define which vectors of FOFT are included')
-
-    parser.add_argument('-f_item', 
-                        "--FOFT_elements",
-                        nargs='+',
-                        help = 'Define which connections of FOFT are included')
-
-    parser.add_argument('-xls', 
-                        "--print_xls",
-                        action='store_true',
-                        help = 'Define if output shall be printed in spreadsheet')
-
-    # Parse the argument
-    args = parser.parse_args()
-
-
-    ip_path = args.input_file
+    ip_path = args[1]
     ip_dirname = os.path.dirname(ip_path)
 
     old_path = os.getcwd()
@@ -945,7 +888,7 @@ if __name__ == '__main__':
     raw_names = tuple([r'fflow', r'fstatus', r'coft', r'foft'])
     fnames = []
     plot_bool = dict()
-    fnames_map = dict()
+    fnames_map=dict()
 
     #Map out files linked to input file
     for f in os.listdir():
@@ -971,20 +914,13 @@ if __name__ == '__main__':
     print('EOS version: {:s}'.format(EOS))
 
     #Define horizontal scale type
-    # if 'log' in args.scale_x:
-    #     print('Plots will be plot in logarithmic scale')
-    #     logscale = True
-    #     # args.remove('log')
-    # else:
-    #     print('Plots will be plot in linear scale')
-
-    logscale = args.log_scale_x
-
-    if logscale:
+    if 'log' in args:
         print('Plots will be plot in logarithmic scale')
-        # args.remove('log')
+        logscale = True
+        args.remove('log')
     else:
         print('Plots will be plot in linear scale')
+
 
     #Define how files will be parsed
     parse_dict = dict()
@@ -1002,8 +938,10 @@ if __name__ == '__main__':
 
     #Define which files and variables will be plotted
     plot_bool, plot_dict = plot_specs(args, plot_bool, fnames)
-    # print(f'plot_bool is {plot_bool}')
-    # print(f'plot_dict is {plot_dict}')
+    
+
+    print(f'plot_bool is {plot_bool}')
+    print(f'plot_dict is {plot_dict}')
 
     eleme, conne = read_ipMESH(ip_file)
 
@@ -1015,18 +953,14 @@ if __name__ == '__main__':
     # print(f'fnames_map is {fnames_map}')
 
     #Print data in spreadsheet
-    print_Excel = args.print_xls
+    print_Excel = True
 
-    # xls_output = input('Do you want to store output files as spreadsheet (Y/N). Default is Yes?\t')
+    xls_output = input('Do you want to store output files as spreadsheet (Y/N). Default is Yes?\t')
 
-    # if xls_output.lower().startswith('n'):
-    #     print_Excel = False
+    if xls_output.lower().startswith('n'):
+        print_Excel = False
 
 
    
     if print_Excel:
-        print('\n\nOuput data will be written into a spreadsheet')
         Excel_printer(fnames_map, ip_file, eleme, conne)
-
-
-
