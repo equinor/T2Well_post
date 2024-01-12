@@ -508,7 +508,7 @@ def plot_OFT(title, df, items, df_vars, logscale, mesh_eleme, mesh_conne):
 
     for var_idx, var in enumerate(df_vars):
 
-        print(var_idx, var)
+        # print(var_idx, var)
 
 
         if len(df_vars)>1:
@@ -580,6 +580,39 @@ def plot_specs(ip_args, plot_bool, files):
     """Defines the files and variables that will be plotted"""   
     plot_dict = dict()
 
+
+
+
+    bool_list = []
+    for arg in vars(ip_args):
+
+        if arg.lower() in files:
+            bool_list.append(getattr(ip_args, arg))
+
+
+    #If individual files are declared set ploot_bool to False
+    # print(f'The fisrt bool list is {plot_bool}')
+    if any(bool_list):
+        # Set all files to False, they well evaluated infdividually
+        for file in files:
+            plot_bool[file] = False
+
+    else:
+        for file in files:
+
+            if file in ['fstatus', 'fflow']:
+                plot_dict[file] = 'all'
+
+            elif file in ['coft', 'foft']:
+                plot_dict[file]=dict()
+                plot_dict[file]['var'] = 'all'
+                plot_dict[file]['item'] = 'all'
+
+
+    # print(f'The second bool list is {plot_bool}')
+
+
+
     #Check for FStatus
     if ip_args.FStatus:
         plot_bool['fstatus'] = True
@@ -590,8 +623,7 @@ def plot_specs(ip_args, plot_bool, files):
         else:
             plot_dict['fstatus'] = ip_args.FStatus_vectors
 
-    else:
-        plot_bool['fstatus'] = False
+
 
     #Check for FFlow
     if ip_args.FFlow:
@@ -603,8 +635,7 @@ def plot_specs(ip_args, plot_bool, files):
         else:
             plot_dict['fflow'] = ip_args.FFlow_vectors
 
-    else:
-        plot_bool['fflow'] = False    
+
 
     #Check for COFT
     if ip_args.COFT:
@@ -622,8 +653,6 @@ def plot_specs(ip_args, plot_bool, files):
         
         else:
             plot_dict['coft']['item'] = ip_args.COFT_connections
-    else:
-        plot_bool['coft'] = False        
 
         
     #Check for FOFT
@@ -643,8 +672,7 @@ def plot_specs(ip_args, plot_bool, files):
         else:
             plot_dict['foft']['item'] = ip_args.FOFT_elements
 
-    else:
-        plot_bool['foft'] = False    
+
 
     return plot_bool, plot_dict
 
@@ -774,7 +802,7 @@ def plotter_manager(fnames_map, plot_bool, eleme, conne):
 
 
         if plot_f:
-            print(f'Plotting {file} data\n')
+            print(f'\n\nPlotting {file} data\n')
 
             if ftype in ['fflow', 'fstatus']:
                 queried_vars = plot_dict[ftype]
@@ -875,7 +903,7 @@ if __name__ == '__main__':
     
     parser.add_argument('-fst', 
                         "--FStatus",
-                        action='store_false',
+                        action='store_true',
                         help = 'Define if FStatus is included')
 
     parser.add_argument('-fst_var', 
@@ -885,7 +913,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-ffl', 
                         "--FFlow",
-                        action='store_false',
+                        action='store_true',
                         help = 'Define if FFlow is included')
 
     parser.add_argument('-ffl_var', 
@@ -895,7 +923,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-c', 
                         "--COFT",
-                        action='store_false',
+                        action='store_true',
                         help = 'Define if COFT is included')
     
     parser.add_argument('-c_var', 
@@ -911,7 +939,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-f', 
                         "--FOFT",
-                        action='store_false',
+                        action='store_true',
                         help = 'Define if FOFT is included')
     
     parser.add_argument('-f_var', 
@@ -1001,7 +1029,7 @@ if __name__ == '__main__':
 
 
     #Define which files and variables will be plotted
-    plot_bool, plot_dict = plot_specs(args, plot_bool, fnames)
+    plot_bool, plot_dict = plot_specs(args, plot_bool, fnames_map)
     # print(f'plot_bool is {plot_bool}')
     # print(f'plot_dict is {plot_dict}')
 
