@@ -22,7 +22,8 @@ rcParams['ytick.major.size'] = 3
 rcParams['xtick.major.size'] = 3
 rcParams['font.size'] = 6
 rcParams['lines.linewidth'] = 0.75
-
+rcParams['scatter.marker'] = 'o'
+rcParams['lines.markersize'] = 2
 
 #### Global variables
 
@@ -576,10 +577,13 @@ def get_EOS(fname):
             EOS = line.split()[5].strip('*')
             return EOS
 
-def plot_specs(ip_args, plot_bool, files):
+def plot_specs(ip_args, files):
     """Defines the files and variables that will be plotted"""   
     plot_dict = dict()
+    plot_bool = dict()
 
+    for file in files:
+        plot_bool[file] = True
 
 
 
@@ -883,6 +887,84 @@ def plotter_manager(fnames_map, plot_bool, eleme, conne):
                 plot_OFT(ftype, df, selected_items, selected_var, logscale, mesh_eleme=eleme, mesh_conne=conne)
 
 
+def map_file_names():
+    raw_names = tuple([r'fflow', r'fstatus', r'coft', r'foft'])
+    fnames = []
+    # plot_bool = dict()
+    fnames_map = dict()
+
+    #Map out files linked to input file
+    for f in os.listdir():
+        if f.lower().startswith(raw_names):
+            f_size = os.path.getsize(f)
+            if f_size>0:
+                # print(f'{f} file exists and will be added to fnames_map and plot_bool')
+                fnames.append(f)
+                flabel = f.lower().split('_')[0]
+                fnames_map[flabel] = f
+                # plot_bool[flabel] = True
+
+        elif f.endswith(tuple(['.in', '.inp'])):
+            ip_file = f
+
+        elif f.endswith('out'):
+            op_file = f
+        
+    return ip_file, op_file, fnames_map
+
+
+def plot_time_steps(fnames_map):
+
+    fig, (ax, ax2) = plt.subplots(2,1, sharex=True)
+
+    ax2.set_xlabel('time [s]')
+    ax.set_ylabel('time_index')
+    ax2.set_ylabel('dt [s]')
+
+
+    for file in fnames_map:
+        if file=='fflow':
+            var, df = read_FFlow(fnames_map[file], EOS)
+            time_steps = df.Time.drop_duplicates()
+            dt = time_steps.diff()
+            time_index = np.arange(time_steps.shape[0])
+            ax.scatter(time_steps, time_index, label=file)
+            ax2.scatter(time_steps, dt)
+            
+        elif file=='fstatus':
+            var, df = read_FStatus(fnames_map[file], EOS)
+            time_steps = df.Time.drop_duplicates()
+            dt = time_steps.diff()
+
+            time_index = np.arange(time_steps.shape[0])
+            ax.scatter(time_steps, time_index, label=file, marker = '>')
+            ax2.scatter(time_steps, dt, marker = '>')
+  
+
+        elif file=='coft':
+            var, idx, df = read_COFT(fnames_map[file], EOS)
+
+            dt = df.time.diff()
+            ax.scatter(df.time, np.arange(df.time.shape[0]), label=file)
+            ax2.scatter(df.time, dt, label=file)
+
+
+        elif file=='foft':
+            var, idx, df = read_FOFT(fnames_map[file], EOS)
+
+            dt = df.time.diff()
+            ax.scatter(df.time, np.arange(df.time.shape[0]), label=file, marker = '>')
+            ax2.scatter(df.time, dt, label=file, marker = '>')
+
+    secondary_scale(False, ax=ax)
+
+    ax.legend()
+
+    fig.tight_layout()
+
+    return fig, ax
+
+
 if __name__ == '__main__':
     # args = sys.argv
     # print(args)
@@ -956,6 +1038,10 @@ if __name__ == '__main__':
                         "--print_xls",
                         action='store_true',
                         help = 'Define if output shall be printed in spreadsheet')
+    parser.add_argument('-ts', 
+                        "--time_steps",
+                        action='store_true',
+                        help = 'Preliminary analysis of time steps')
 
     # Parse the argument
     args = parser.parse_args()
@@ -969,31 +1055,19 @@ if __name__ == '__main__':
     if len(ip_dirname)>0:
         os.chdir(ip_dirname)
 
-    
-    raw_names = tuple([r'fflow', r'fstatus', r'coft', r'foft'])
-    fnames = []
-    plot_bool = dict()
-    fnames_map = dict()
 
-    #Map out files linked to input file
-    for f in os.listdir():
-        if f.lower().startswith(raw_names):
-            f_size = os.path.getsize(f)
-            if f_size>0:
-                # print(f'{f} file exists and will be added to fnames_map and plot_bool')
-                fnames.append(f)
-                flabel = f.lower().split('_')[0]
-                fnames_map[flabel] = f
-                plot_bool[flabel] = True
 
-        elif f.endswith(tuple(['.in', '.inp'])):
-            ip_file = f
-
-        elif f.endswith('out'):
-            op_file = f
-
+    ip_file, op_file, fnames_map = map_file_names()
 
     EOS = get_EOS(op_file)
+
+
+    if args.time_steps:
+        print('The script will produce only a plot showing the time step frequency of the input files')
+        f_ts, ax_ts = plot_time_steps(fnames_map=fnames_map)
+        f_ts.savefig('time_steps.png')
+        sys.exit()
+
     print(f'T2Well input file: {ip_file}')
     print(f'T2Well output file: {op_file}')
     print('EOS version: {:s}'.format(EOS))
@@ -1029,7 +1103,7 @@ if __name__ == '__main__':
 
 
     #Define which files and variables will be plotted
-    plot_bool, plot_dict = plot_specs(args, plot_bool, fnames_map)
+    plot_bool, plot_dict = plot_specs(args, fnames_map)
     # print(f'plot_bool is {plot_bool}')
     # print(f'plot_dict is {plot_dict}')
 
