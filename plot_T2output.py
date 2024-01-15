@@ -396,7 +396,7 @@ def secondary_scale(log_bool, ax):
 
 
 
-def plot_Ffigure(title,df,df_vars, logscale, EOS):
+def plot_Ffigure(title,df,df_vars, logscale, EOS, bool_pcm):
     """
     Function for plotting the FFlow or FStatus files
     Takes three parameters
@@ -451,15 +451,28 @@ def plot_Ffigure(title,df,df_vars, logscale, EOS):
 
         Z = df[var].values.reshape(size_i, size_j)
         
+        if bool_pcm:
+            try:
+                cf = ax.pcolormesh(X, Y, Z, vmin = UNIT_LIMITS[var][0], vmax = UNIT_LIMITS[var][1], shading = 'gouraud')
+                cb = plt.colorbar(ScalarMappable(norm=cf.norm, cmap=cf.cmap), ax=ax,
+                                    ticks=np.linspace(UNIT_LIMITS[var][0], UNIT_LIMITS[var][1], 6))
+            except:
+                cf = ax.pcolormesh(X, Y, Z, shading = 'gouraud')
+                cb = plt.colorbar(cf, ax=ax)
 
-        try:
-            cf = ax.contourf(X, Y, Z, vmin = UNIT_LIMITS[var][0], vmax = UNIT_LIMITS[var][1])
-            cb = plt.colorbar(ScalarMappable(norm=cf.norm, cmap=cf.cmap), ax=ax,
-                                ticks=np.linspace(UNIT_LIMITS[var][0], UNIT_LIMITS[var][1], 6))
-        except:
-            cf = ax.contourf(X, Y, Z)
-            cb = plt.colorbar(cf, ax=ax)
-        
+        else:
+            try:
+                cf = ax.contourf(X, Y, Z, vmin = UNIT_LIMITS[var][0], vmax = UNIT_LIMITS[var][1])
+                cb = plt.colorbar(ScalarMappable(norm=cf.norm, cmap=cf.cmap), ax=ax,
+                                    ticks=np.linspace(UNIT_LIMITS[var][0], UNIT_LIMITS[var][1], 6))
+            except:
+                cf = ax.contourf(X, Y, Z)
+                cb = plt.colorbar(cf, ax=ax)
+
+
+
+
+
         cb.set_label('{:s} [{:s}]'.format(var,UNITS_DICT_SCREEN[var]))
         ax.set_ylabel('depth [m]')
 
@@ -788,7 +801,7 @@ def Excel_printer(fnames_map, ip_file, eleme, conne):
 
 
 
-def plotter_manager(fnames_map, plot_bool, eleme, conne):
+def plotter_manager(fnames_map, plot_bool, eleme, conne, bool_pcm):
     """Orchestrates the plotting of figures"""
     for ftype in fnames_map:    
         
@@ -833,7 +846,7 @@ def plotter_manager(fnames_map, plot_bool, eleme, conne):
 
                 print(f'Plot for "{file}" includes: {" ".join(selected_var)}')
 
-                plot_Ffigure(ftype, df,selected_var, logscale, EOS)
+                plot_Ffigure(ftype, df,selected_var, logscale, EOS, bool_pcm)
 
 
 
@@ -1038,10 +1051,17 @@ if __name__ == '__main__':
                         "--print_xls",
                         action='store_true',
                         help = 'Define if output shall be printed in spreadsheet')
+
     parser.add_argument('-ts', 
                         "--time_steps",
                         action='store_true',
                         help = 'Preliminary analysis of time steps')
+
+    parser.add_argument('-pcm', 
+                        "--pcolormesh",
+                        action='store_true',
+                        help = 'Preliminary analysis of time steps')
+
 
     # Parse the argument
     args = parser.parse_args()
@@ -1049,6 +1069,8 @@ if __name__ == '__main__':
 
     ip_path = args.input_file
     ip_dirname = os.path.dirname(ip_path)
+
+    pcm = args.pcolormesh
 
     old_path = os.getcwd()
 
@@ -1110,7 +1132,7 @@ if __name__ == '__main__':
     eleme, conne = read_ipMESH(ip_file)
 
     
-    plotter_manager(fnames_map, plot_bool, eleme, conne)
+    plotter_manager(fnames_map, plot_bool, eleme, conne, bool_pcm=pcm)
 
     #Query and index data
 
