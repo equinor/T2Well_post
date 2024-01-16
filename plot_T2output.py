@@ -985,7 +985,7 @@ def plot_FOFT_PT(fnames_map, mesh_eleme):
     """
     Plots P,T plot of FOTT elements overlaid by phase envelope for pure CO2
     """
-    
+
     vars, items, df = read_FOFT(fnames_map['foft'], EOS)
 
     fig, ax = plt.subplots()
@@ -998,8 +998,11 @@ def plot_FOFT_PT(fnames_map, mesh_eleme):
         el = mesh_eleme.loc[item,'ElName']
         mat = mesh_eleme.loc[item,'MAT']
         item_label = '{:<4d}{:s}({:s})'.format(item,el,mat)
-
+        ax.scatter(x_T.iloc[0], y_P.iloc[0], marker='|', s=20, color='k', label = '$t_0$', zorder=100)
+        ax.scatter(x_T.iloc[-1], y_P.iloc[-1], marker='D', s=10, color='k', label = '$t_f$', zorder=100)
+        
         ax.scatter(x_T, y_P, label = item_label)
+
 
 
     xlim = ax.get_xlim()
@@ -1013,9 +1016,8 @@ def plot_FOFT_PT(fnames_map, mesh_eleme):
     ax.scatter(t_co2.max(), p_co2.max(), c='k')
     ax.hlines(y=p_co2.max(), xmin=t_co2.max(), xmax=xlim[1], ls=':', color='k')
     ax.vlines(x=t_co2.max(), ymin=p_co2.max(), ymax=ylim[1], ls=':', color='k')
-    
-    
-    
+
+
     ax.set_ylim(bottom=0, top=ylim[1])
     ax.set_xlim(left=0, right=xlim[1])
 
@@ -1023,6 +1025,10 @@ def plot_FOFT_PT(fnames_map, mesh_eleme):
     ax.set_xlabel('T [$\degree$C]')
 
     ax.legend()
+
+    handles, labels = plt.gca().get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    ax.legend(by_label.values(), by_label.keys())
 
     return fig, ax
 
@@ -1203,6 +1209,8 @@ if __name__ == '__main__':
 
     if args.FOFT_PT:
         fig, ax = plot_FOFT_PT(fnames_map, eleme)
+        fig.set_size_inches(5.91, 4.74)
+        fig.tight_layout()
         fig.savefig('fig_foft_pt.png')
    
     if print_Excel:
