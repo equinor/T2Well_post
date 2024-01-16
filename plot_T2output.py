@@ -414,8 +414,11 @@ def plot_Ffigure(title,df,df_vars, logscale, EOS, bool_pcm):
     
     #Set plot dimensions
     w = 5
-    h = (2.5-1)*len(plot_vars)
+    h = 2.5*len(plot_vars) - 1
+    h = min(8, h)
+
     rcParams['figure.figsize'] = [w,h]
+    print(f'figure height is {h}')
 
     #Create axes
     fig, axs = plt.subplots(len(plot_vars),1, sharex=True)
