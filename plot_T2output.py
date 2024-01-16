@@ -453,11 +453,11 @@ def plot_Ffigure(title,df,df_vars, logscale, EOS, bool_pcm):
         
         if bool_pcm:
             try:
-                cf = ax.pcolormesh(X, Y, Z, vmin = UNIT_LIMITS[var][0], vmax = UNIT_LIMITS[var][1], shading = 'gouraud')
+                cf = ax.pcolormesh(X, Y, Z, vmin = UNIT_LIMITS[var][0], vmax = UNIT_LIMITS[var][1], shading = 'nearest')
                 cb = plt.colorbar(ScalarMappable(norm=cf.norm, cmap=cf.cmap), ax=ax,
                                     ticks=np.linspace(UNIT_LIMITS[var][0], UNIT_LIMITS[var][1], 6))
             except:
-                cf = ax.pcolormesh(X, Y, Z, shading = 'gouraud')
+                cf = ax.pcolormesh(X, Y, Z, shading = 'nearest')
                 cb = plt.colorbar(cf, ax=ax)
 
         else:
@@ -927,6 +927,9 @@ def map_file_names():
 
 
 def plot_time_steps(fnames_map):
+    """
+    Plot time step frequency
+    """
 
     fig, (ax, ax2) = plt.subplots(2,1, sharex=True)
 
@@ -974,6 +977,52 @@ def plot_time_steps(fnames_map):
     ax.legend()
 
     fig.tight_layout()
+
+    return fig, ax
+
+
+def plot_FOFT_PT(fnames_map, mesh_eleme):
+    """
+    Plots P,T plot of FOTT elements overlaid by phase envelope for pure CO2
+    """
+    
+    vars, items, df = read_FOFT(fnames_map['foft'], EOS)
+
+    fig, ax = plt.subplots()
+
+
+    for item in items:
+        x_T = df[item, 'T']
+        y_P = df[item, 'Pres']
+
+        el = mesh_eleme.loc[item,'ElName']
+        mat = mesh_eleme.loc[item,'MAT']
+        item_label = '{:<4d}{:s}({:s})'.format(item,el,mat)
+
+        ax.scatter(x_T, y_P, label = item_label)
+
+
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+
+    #Plot phase boundary and critical point
+
+    t_co2 = np.array([-50,-48.35,-46.69,-45.04,-43.38,-41.73,-40.08,-38.42,-36.77,-35.11,-33.46,-31.81,-30.15,-28.5,-26.84,-25.19,-23.53,-21.88,-20.23,-18.57,-16.92,-15.26,-13.61,-11.96,-10.3,-8.65,-6.99,-5.34,-3.69,-2.03,-0.38,1.28,2.93,4.58,6.24,7.89,9.55,11.2,12.86,14.51,16.16,17.82,19.47,21.13,22.78,24.43,31.05])
+    p_co2 = np.array([6.8,7.27,7.77,8.29,8.83,9.4,10,10.63,11.28,11.97,12.68,13.43,14.21,15.02,15.87,16.75,17.66,18.62,19.61,20.64,21.7,22.81,23.96,25.15,26.38,27.66,28.98,30.34,31.76,33.21,34.72,36.28,37.89,39.54,41.25,43.01,44.83,46.7,48.63,50.61,52.65,54.75,56.91,59.12,61.4,63.75,73.76])
+    ax.plot(t_co2, p_co2, color='k', lw=1.5, label = r'$CO_2$ phase env.')
+    ax.scatter(t_co2.max(), p_co2.max(), c='k')
+    ax.hlines(y=p_co2.max(), xmin=t_co2.max(), xmax=xlim[1], ls=':', color='k')
+    ax.vlines(x=t_co2.max(), ymin=p_co2.max(), ymax=ylim[1], ls=':', color='k')
+    
+    
+    
+    ax.set_ylim(bottom=0, top=ylim[1])
+    ax.set_xlim(left=0, right=xlim[1])
+
+    ax.set_ylabel('p [bar]')
+    ax.set_xlabel('T [$\degree$C]')
+
+    ax.legend()
 
     return fig, ax
 
@@ -1060,7 +1109,13 @@ if __name__ == '__main__':
     parser.add_argument('-pcm', 
                         "--pcolormesh",
                         action='store_true',
-                        help = 'Preliminary analysis of time steps')
+                        help = 'Option to create a pcolormesh in FFlow and Fstatus plot')
+
+    parser.add_argument('-f_PT', 
+                        "--FOFT_PT",
+                        action='store_true',
+                        help = 'Option to create a PT plot of FOFT elements')
+
 
 
     # Parse the argument
@@ -1146,7 +1201,9 @@ if __name__ == '__main__':
     # if xls_output.lower().startswith('n'):
     #     print_Excel = False
 
-
+    if args.FOFT_PT:
+        fig, ax = plot_FOFT_PT(fnames_map, eleme)
+        fig.savefig('fig_foft_pt.png')
    
     if print_Excel:
         print('\n\nOuput data will be written into a spreadsheet')
