@@ -57,6 +57,7 @@ Maybe it is getting to complex and we can think of better ways of calling the sc
 | ----------------------------------- | ------------------------------------------------------- |
 | `-h`, `--help`                  | show help message and exit                              |
 | `-logx`, `--log_scale_x`        | declare if a logarithmic X scale is required            |
+| `-logy`, `--log_scale_y`        | declare if a logarithmic Y scale is required (COFT and FOFT only)            |
 | `-fst`, `--FStatus`             | declare if FStatus is included                          |
 | `-fst_var`, `--FStatus_vectors` | list which vectors of FStatus are included              |
 | `-ffl`, `--FFlow`               | declare if FFlow is included                            |
