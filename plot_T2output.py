@@ -495,7 +495,7 @@ def plot_Ffigure(title,df,df_vars, logscale, EOS, bool_pcm):
 
 
 
-def plot_OFT(title, df, items, df_vars, logscale, mesh_eleme, mesh_conne):
+def plot_OFT(title, df, items, df_vars, logscale, logscale_y, mesh_eleme, mesh_conne):
     """
     Function for plotting the COFT or FOFT files
     Takes four parameters
@@ -554,11 +554,16 @@ def plot_OFT(title, df, items, df_vars, logscale, mesh_eleme, mesh_conne):
                 item_label = '{:<4d}{:s}({:s})'.format(item,el,mat)
             df.plot(x='time', y=(item, var), ax=ax, label=item_label, legend = False)
 
+            if logscale_y:
+                ax.set_yscale('symlog')
+
         if var == df_vars[-1]:
             ax.set_xlabel('time [s]')
 
         if var == df_vars[0]:
             secondary_scale(logscale, ax)
+        
+
         
 
         
@@ -574,6 +579,8 @@ def plot_OFT(title, df, items, df_vars, logscale, mesh_eleme, mesh_conne):
     fig.align_ylabels()
     fig.tight_layout(rect=[0,0,0.75,0.98])
     fig.savefig(r'fig_{:s}.png'.format(title))
+
+    return fig, axs
 
 
 
@@ -804,7 +811,7 @@ def Excel_printer(fnames_map, ip_file, eleme, conne):
 
 
 
-def plotter_manager(fnames_map, plot_bool, eleme, conne, bool_pcm):
+def plotter_manager(fnames_map, plot_bool, eleme, conne, bool_pcm, logscale_y):
     """Orchestrates the plotting of figures"""
     for ftype in fnames_map:    
         
@@ -900,7 +907,7 @@ def plotter_manager(fnames_map, plot_bool, eleme, conne, bool_pcm):
 
                 print('{:s} plotted variables include: {:s}'.format(file, ' '.join(selected_var)))
                 print('{:s} plotted items include: {:s}'.format(file, ' '.join(map(str,selected_items))))
-                plot_OFT(ftype, df, selected_items, selected_var, logscale, mesh_eleme=eleme, mesh_conne=conne)
+                plot_OFT(ftype, df, selected_items, selected_var, logscale, logscale_y, mesh_eleme=eleme, mesh_conne=conne)
 
 
 def map_file_names():
@@ -1053,7 +1060,12 @@ if __name__ == '__main__':
                         "--log_scale_x",
                         action='store_true',
                         help = 'Define if a logarithmic X scale is required')
-    
+
+    parser.add_argument('-logy', 
+                        "--log_scale_y",
+                        action='store_true',
+                        help = 'Define if a logarithmic Y scale is required in COFT and FOFT')
+
     parser.add_argument('-fst', 
                         "--FStatus",
                         action='store_true',
@@ -1167,12 +1179,20 @@ if __name__ == '__main__':
     #     print('Plots will be plot in linear scale')
 
     logscale = args.log_scale_x
+    logscale_y = args.log_scale_y
+
 
     if logscale:
-        print('Plots will be plot in logarithmic scale')
+        print('Plots will be plotted with the X axis in logarithmic scale')
         # args.remove('log')
     else:
-        print('Plots will be plot in linear scale')
+        print('Plots will be plotted with the X axis in logarithmic scale')
+
+    if logscale_y:
+        print('COFT, FOFT will be plotted with the Y axis in logarithmic scale')
+        # args.remove('log')
+    else:
+        print('COFT, FOFT will be plotted with the Y axis in linear scale')
 
     #Define how files will be parsed
     parse_dict = dict()
@@ -1196,7 +1216,7 @@ if __name__ == '__main__':
     eleme, conne = read_ipMESH(ip_file)
 
     
-    plotter_manager(fnames_map, plot_bool, eleme, conne, bool_pcm=pcm)
+    plotter_manager(fnames_map, plot_bool, eleme, conne, pcm, logscale_y)
 
     #Query and index data
 
