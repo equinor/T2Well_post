@@ -589,8 +589,11 @@ def plot_OFT(title, df, items, df_vars, logscale, logscale_y, mesh_eleme, mesh_c
 
 #Define variables for plotting based on input arguments
 
-def get_EOS(fname):
+def get_EOS():
     """Retrieves EOS from output file"""
+
+    fname = 'VERS'
+
     with open(fname, 'r', encoding='latin1') as of:
         lines = of.readlines()
 
@@ -1157,7 +1160,7 @@ if __name__ == '__main__':
 
     ip_file, op_file, fnames_map = map_file_names()
 
-    EOS = get_EOS(op_file)
+    EOS = get_EOS()
 
 
     if args.time_steps:
