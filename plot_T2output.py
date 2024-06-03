@@ -525,7 +525,7 @@ def plot_OFT(title, df, items, df_vars, logscale, logscale_y, mesh_eleme, mesh_c
 
     for var_idx, var in enumerate(df_vars):
 
-        # print(var_idx, var)
+        # print(f'{var_idx=}, {var=}')
 
 
         if len(df_vars)>1:
@@ -553,7 +553,7 @@ def plot_OFT(title, df, items, df_vars, logscale, logscale_y, mesh_eleme, mesh_c
                 mat = mesh_eleme.loc[item,'MAT']
                 item_label = '{:<4d}{:s}({:s})'.format(item,el,mat)
             df.plot(x='time', y=(item, var), ax=ax, label=item_label, legend = False)
-
+            
             if logscale_y:
                 ax.set_yscale('symlog')
 
@@ -569,9 +569,8 @@ def plot_OFT(title, df, items, df_vars, logscale, logscale_y, mesh_eleme, mesh_c
         
         
         ax.set_ylabel('{:s} [{:s}]'.format(var, UNITS_DICT_SCREEN[var]))
-        
-    if title == 'foft':
-        ax.set_yscale('log')
+    
+
 
     fig.suptitle(title)
     handles, labels = ax.get_legend_handles_labels()
