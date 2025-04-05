@@ -22,6 +22,7 @@ Download/clone the contents of this repository
 
 ## Usage
 
+Make sure that all tge input and output files are located in the same directory. this involves both the resilt reporting files (Fstatus, FFlow, COFT) and the system files (e.g. VERS).
 By typing the line below, the script will produce 4 figures (1 per file), including all variables reported in the files. For the specific case of COFT and FOFT, the figures will include all items (mesh elements and connections).
 
 ```shell
