@@ -709,7 +709,7 @@ def plot_specs(ip_args, files):
 
 
 
-def Excel_printer(fnames_map, ip_file, eleme, conne):
+def Excel_printer(fnames_map, ip_file, eleme, conne, EOS):
     """Orchestrates the printing of tables on a spreadsheet"""
     spreadsheet = ip_file.split(".")[0]+".xlsx"
     pd_units = pd.Series(UNITS_DICT_PRINT)
@@ -813,7 +813,7 @@ def Excel_printer(fnames_map, ip_file, eleme, conne):
 
 
 
-def plotter_manager(fnames_map, plot_bool, eleme, conne, bool_pcm, logscale_y):
+def plotter_manager(fnames_map, plot_bool, eleme, conne, bool_pcm, logscale_y, parse_dict, plot_dict,EOS, logscale):
     """Orchestrates the plotting of figures"""
     for ftype in fnames_map:    
         
@@ -938,7 +938,7 @@ def map_file_names():
     return ip_file, op_file, fnames_map
 
 
-def plot_time_steps(fnames_map):
+def plot_time_steps(fnames_map, EOS):
     """
     Plot time step frequency
     """
@@ -993,7 +993,7 @@ def plot_time_steps(fnames_map):
     return fig, ax
 
 
-def plot_FOFT_PT(fnames_map, mesh_eleme):
+def plot_FOFT_PT(fnames_map, mesh_eleme,EOS):
     """
     Plots P,T plot of FOTT elements overlaid by phase envelope for pure CO2
     """
@@ -1144,6 +1144,8 @@ def main():
     # Parse the argument
     args = parser.parse_args()
 
+    print(args)
+
 
     ip_path = args.input_file
     ip_dirname = os.path.dirname(ip_path)
@@ -1178,52 +1180,45 @@ def main():
     print('EOS version: {:s}'.format(EOS))
 
     # Define horizontal scale type
-    if 'log' in args.scale_x:
-        print('Plots will be plot in logarithmic scale')
-        logscale = True
+    logscale = args.log_scale_x
+    logscale_y = args.log_scale_y
+
+
+    if logscale:
+        print('Plots will be plotted with the X axis in logarithmic scale')
         # args.remove('log')
     else:
-        print('Plots will be plot in linear scale')
+        print('Plots will be plotted with the X axis in logarithmic scale')
 
-    # logscale = args.log_scale_x
-    # logscale_y = args.log_scale_y
+    if logscale_y:
+        print('COFT, FOFT will be plotted with the Y axis in logarithmic scale')
+        # args.remove('log')
+    else:
+        print('COFT, FOFT will be plotted with the Y axis in linear scale')
 
+    #Define how files will be parsed
+    parse_dict = dict()
 
-    # if logscale:
-    #     print('Plots will be plotted with the X axis in logarithmic scale')
-    #     # args.remove('log')
-    # else:
-    #     print('Plots will be plotted with the X axis in logarithmic scale')
-
-    # if logscale_y:
-    #     print('COFT, FOFT will be plotted with the Y axis in logarithmic scale')
-    #     # args.remove('log')
-    # else:
-    #     print('COFT, FOFT will be plotted with the Y axis in linear scale')
-
-    # #Define how files will be parsed
-    # parse_dict = dict()
-
-    # for file in fnames_map:
-    #     if file.lower().startswith('fflow'):
-    #         parse_dict[file]=read_FFlow
-    #     elif file.lower().startswith('fstatus'):
-    #         parse_dict[file]=read_FStatus
-    #     elif file.startswith('coft'):
-    #         parse_dict[file]=read_COFT
-    #     elif file.startswith('foft'):
-    #         parse_dict[file]=read_FOFT
+    for file in fnames_map:
+        if file.lower().startswith('fflow'):
+            parse_dict[file]=read_FFlow
+        elif file.lower().startswith('fstatus'):
+            parse_dict[file]=read_FStatus
+        elif file.startswith('coft'):
+            parse_dict[file]=read_COFT
+        elif file.startswith('foft'):
+            parse_dict[file]=read_FOFT
 
 
-    # #Define which files and variables will be plotted
-    # plot_bool, plot_dict = plot_specs(args, fnames_map)
-    # # print(f'plot_bool is {plot_bool}')
-    # # print(f'plot_dict is {plot_dict}')
-
-    # eleme, conne = read_ipMESH(ip_file)
+    #Define which files and variables will be plotted
+    plot_bool, plot_dict = plot_specs(args, fnames_map)
+    print(f'{plot_bool=}')
+    print(f'{plot_dict=}')
+    print(f'{parse_dict=}')
+    eleme, conne = read_ipMESH(ip_file)
 
     
-    # plotter_manager(fnames_map, plot_bool, eleme, conne, pcm, logscale_y)
+    plotter_manager(fnames_map, plot_bool, eleme, conne, pcm, logscale_y, parse_dict, plot_dict,EOS, logscale)
 
     # #Query and index data
 
