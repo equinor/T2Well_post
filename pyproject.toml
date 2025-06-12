@@ -12,10 +12,6 @@ dependencies = [
     "numpy>=2.3.0",
     "pandas>=2.3.0",]
 
-include = [
-    "src/tough_well_post/sample_files/*",
-]
-
 
 
 
