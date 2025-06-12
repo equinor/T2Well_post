@@ -13,6 +13,8 @@ dependencies = [
     "pandas>=2.3.0",
 ]
 
+[project.scripts]
+plot_T2output = "src.tough_well_post:main"
 
 
 [tool.setuptools]
