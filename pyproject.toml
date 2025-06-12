@@ -13,13 +13,6 @@ dependencies = [
     "pandas>=2.3.0",
 ]
 
-[project.scripts]
-plot_T2output = "src.tough_well_post:main"
-
-
-[tool.setuptools]
-package-dir = {"" = "src"}
-include-package-data = true
-
-[tool.setuptools.package-data]
-"tough_well_post" = ["sample_files/*"]
+[tool.package]
+include = "tough_well_post"
+from = "src"
