@@ -16,3 +16,8 @@ dependencies = [
 [tool.package]
 include = "tough_well_post"
 from = "src"
+
+
+
+[project.scripts]
+plot_T2output = "tough_well_post.plot_T2output:main"
