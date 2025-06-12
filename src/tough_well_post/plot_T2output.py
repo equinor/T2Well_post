@@ -1150,6 +1150,8 @@ def main():
 
     pcm = args.pcolormesh
 
+    print(ip_path)
+
     old_path = os.getcwd()
 
     if len(ip_dirname)>0:
@@ -1159,7 +1161,10 @@ def main():
 
     ip_file, op_file, fnames_map = map_file_names()
 
+    print(fnames_map)
+
     EOS = get_EOS()
+    print(EOS)
 
 
     if args.time_steps:
@@ -1172,75 +1177,75 @@ def main():
     print(f'T2Well output file: {op_file}')
     print('EOS version: {:s}'.format(EOS))
 
-    #Define horizontal scale type
-    # if 'log' in args.scale_x:
-    #     print('Plots will be plot in logarithmic scale')
-    #     logscale = True
+    # Define horizontal scale type
+    if 'log' in args.scale_x:
+        print('Plots will be plot in logarithmic scale')
+        logscale = True
+        # args.remove('log')
+    else:
+        print('Plots will be plot in linear scale')
+
+    # logscale = args.log_scale_x
+    # logscale_y = args.log_scale_y
+
+
+    # if logscale:
+    #     print('Plots will be plotted with the X axis in logarithmic scale')
     #     # args.remove('log')
     # else:
-    #     print('Plots will be plot in linear scale')
+    #     print('Plots will be plotted with the X axis in logarithmic scale')
 
-    logscale = args.log_scale_x
-    logscale_y = args.log_scale_y
+    # if logscale_y:
+    #     print('COFT, FOFT will be plotted with the Y axis in logarithmic scale')
+    #     # args.remove('log')
+    # else:
+    #     print('COFT, FOFT will be plotted with the Y axis in linear scale')
 
+    # #Define how files will be parsed
+    # parse_dict = dict()
 
-    if logscale:
-        print('Plots will be plotted with the X axis in logarithmic scale')
-        # args.remove('log')
-    else:
-        print('Plots will be plotted with the X axis in logarithmic scale')
-
-    if logscale_y:
-        print('COFT, FOFT will be plotted with the Y axis in logarithmic scale')
-        # args.remove('log')
-    else:
-        print('COFT, FOFT will be plotted with the Y axis in linear scale')
-
-    #Define how files will be parsed
-    parse_dict = dict()
-
-    for file in fnames_map:
-        if file.lower().startswith('fflow'):
-            parse_dict[file]=read_FFlow
-        elif file.lower().startswith('fstatus'):
-            parse_dict[file]=read_FStatus
-        elif file.startswith('coft'):
-            parse_dict[file]=read_COFT
-        elif file.startswith('foft'):
-            parse_dict[file]=read_FOFT
+    # for file in fnames_map:
+    #     if file.lower().startswith('fflow'):
+    #         parse_dict[file]=read_FFlow
+    #     elif file.lower().startswith('fstatus'):
+    #         parse_dict[file]=read_FStatus
+    #     elif file.startswith('coft'):
+    #         parse_dict[file]=read_COFT
+    #     elif file.startswith('foft'):
+    #         parse_dict[file]=read_FOFT
 
 
-    #Define which files and variables will be plotted
-    plot_bool, plot_dict = plot_specs(args, fnames_map)
-    # print(f'plot_bool is {plot_bool}')
-    # print(f'plot_dict is {plot_dict}')
+    # #Define which files and variables will be plotted
+    # plot_bool, plot_dict = plot_specs(args, fnames_map)
+    # # print(f'plot_bool is {plot_bool}')
+    # # print(f'plot_dict is {plot_dict}')
 
-    eleme, conne = read_ipMESH(ip_file)
+    # eleme, conne = read_ipMESH(ip_file)
 
     
-    plotter_manager(fnames_map, plot_bool, eleme, conne, pcm, logscale_y)
+    # plotter_manager(fnames_map, plot_bool, eleme, conne, pcm, logscale_y)
 
-    #Query and index data
+    # #Query and index data
 
-    # print(f'fnames_map is {fnames_map}')
+    # # print(f'fnames_map is {fnames_map}')
 
-    #Print data in spreadsheet
-    print_Excel = args.print_xls
+    # #Print data in spreadsheet
+    # print_Excel = args.print_xls
 
-    # xls_output = input('Do you want to store output files as spreadsheet (Y/N). Default is Yes?\t')
+    # # xls_output = input('Do you want to store output files as spreadsheet (Y/N). Default is Yes?\t')
 
-    # if xls_output.lower().startswith('n'):
-    #     print_Excel = False
+    # # if xls_output.lower().startswith('n'):
+    # #     print_Excel = False
 
-    if args.FOFT_PT:
-        fig, ax = plot_FOFT_PT(fnames_map, eleme)
-        fig.set_size_inches(5.91, 4.74)
-        fig.tight_layout()
-        fig.savefig('fig_foft_pt.png')
+    # if args.FOFT_PT:
+    #     fig, ax = plot_FOFT_PT(fnames_map, eleme)
+    #     fig.set_size_inches(5.91, 4.74)
+    #     fig.tight_layout()
+    #     fig.savefig('fig_foft_pt.png')
    
-    if print_Excel:
-        print('\n\nOuput data will be written into a spreadsheet')
-        Excel_printer(fnames_map, ip_file, eleme, conne)
+    # if print_Excel:
+    #     print('\n\nOuput data will be written into a spreadsheet')
+    #     Excel_printer(fnames_map, ip_file, eleme, conne)
 
 
 
