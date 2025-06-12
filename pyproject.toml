@@ -10,8 +10,11 @@ dependencies = [
     "jupyter>=1.1.1",
     "matplotlib>=3.10.3",
     "numpy>=2.3.0",
-    "pandas>=2.3.0",
-]
+    "pandas>=2.3.0",]
+
+
+
+
 
 
 
@@ -19,7 +22,10 @@ dependencies = [
 
 
 [tool.package]
-include = "tough_well_post"
+include = [
+    "tough_well_post",
+    "tough_well_post/sample_files/*",  # Include all files in the sample_files directory
+]
 from = "src"
 
 
