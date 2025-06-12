@@ -1045,7 +1045,7 @@ def plot_FOFT_PT(fnames_map, mesh_eleme):
     return fig, ax
 
 
-if __name__ == '__main__':
+def main():
     # args = sys.argv
     # print(args)
 
@@ -1244,3 +1244,5 @@ if __name__ == '__main__':
 
 
 
+if __name__ == '__main__':
+    main()
