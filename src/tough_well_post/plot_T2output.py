@@ -13,7 +13,7 @@ import numpy as np
 import argparse
 
 
-plt.style.use('seaborn-white')
+plt.style.use('classic')
 
 
 rcParams['figure.dpi'] = 300
