@@ -22,9 +22,6 @@ include = [
 from = "src"
 
 
-[project.scripts]
-plot_T2output = "tough_well_post.plot_T2output:main"
-
 
 [tool.uv]
 package = true
@@ -33,6 +30,11 @@ package = true
 include = [
     "src/tough_well_post/sample_files/**/*",
 ]
+
+
+[project.scripts]
+plot_T2output = "tough_well_post.plot_T2output:main"
+
 
 [build-system]
 requires = ["hatchling"]
