@@ -3,22 +3,64 @@
 A script for post processing T2 well output simulations.
 The script reads and parses the FStatus, FFlow, COFT and FOFT files and produces plots of the simulation results.
 
-## Installation:
 
-Download/clone the contents of this repository
+  ## Installation
 
-- Create a virtual environment
-  ```shell
-  python -m venv t2_venv
-  ```
-- Activate it
-  ```shell
-  . t2_venv/bin/activate
-  ```
-- Install requirements at location where the repository files are (unzipped).
-  ```shell
-  python -m pip install -r requirements.txt
-  ```
+  ### WINDOWS:
+  1. **Install GIT**  
+    Ensure GIT is installed on your machine. [GIT download link](https://accessit.equinor.com/Search/Search?term=%22GIT%22)
+
+  2. **Install uv**  
+    Open PowerShell or Command Prompt and run:  
+    ```shell
+    winget install --id=astral-sh.uv -e
+    ```
+  
+  ### LINUX
+  2. **Install uv**  
+    Open PowerShell or Command Prompt and run:  
+    ```bash
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    ```
+  
+  3. **Install Python 3.11**  
+    ```shell
+    uv python install 3.11
+    ```
+
+  4. **Set up your project directory**  
+    - Navigate to `C:\Appl` (or `C:\Appl\dev`):  
+      ```shell
+      cd \Appl
+      ```
+    - If the folder does not exist, create it:  
+      ```shell
+      mkdir Appl
+      cd Appl
+      mkdir dev  # optional
+      ```
+
+  5. **Create a new project directory**  
+    ```shell
+    mkdir myproject
+    cd myproject
+    ```
+
+  6. **Initialize the environment**  
+    ```shell
+    uv init --python 3.11
+    ```
+
+  7. **Install this repository as a local package**  
+    ```shell
+    uv add git+https://github.com/equinor/T2Well_post
+    ```
+
+  8. **Upgrade to the latest version (if needed)**  
+    ```shell
+    uv add git+https://github.com/equinor/T2Well_post --upgrade
+    ```
+
 
 ## Usage
 
@@ -27,20 +69,20 @@ By typing the line below, the script will produce 4 figures (1 per file), includ
 
 ```shell
 #short form
-python plot_T2output.py -p /path/to/input/file
+uv run plot_T2output.py -p /path/to/input/file
 
 #long form
-python plot_T2output.py --input_file /path/to/input/file
+uv run plot_T2output.py --input_file /path/to/input/file
 ```
 
 If the user wants to plot fewer variables or fewer items you can type commands such as the one below:
 
 ```shell
 #short form
-python plot_T2output.py -p /path/to/input/file -fst -fst_var 1 3 4 -ffl -c -c_var 1 3 -f -f_item 4 5
+uv run plot_T2output.py -p /path/to/input/file -fst -fst_var 1 3 4 -ffl -c -c_var 1 3 -f -f_item 4 5
 
 #long form
-python plot_T2output.py --input_file /path/to/input/file --FStatus -FStatus_vectors 1 3 4 --FFlow --COFT --COFT_vectors 1 3 --FOFT -FOFT_elements 4 5
+uv run plot_T2output.py --input_file /path/to/input/file --FStatus -FStatus_vectors 1 3 4 --FFlow --COFT --COFT_vectors 1 3 --FOFT -FOFT_elements 4 5
 ```
 
 For this particular example, note the inclusion of the letter “i" after the FOFT line. Such letter can be used for both COFT and FOFT. Anything before it refers to the variables included in the file. Anything after refers to the elements or connections.
